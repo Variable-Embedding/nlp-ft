@@ -65,8 +65,8 @@ class CorpusAnalysisStage(BaseStage):
         with open(corpus_file_path, "r") as file:
             text = file.read()
 
-        output_file_path_prefix = join(constants.OUTPUT_PATH,
-                                       "{}.{}".format(self.parent.topic, self.corpus_file))
+        output_file_path = join(constants.OUTPUT_PATH,
+                                "{}.{}".format(self.parent.topic, self.corpus_file))
 
         tokens = text.split(" ")
 
