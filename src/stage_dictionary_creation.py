@@ -2,6 +2,7 @@
 """
 from base_stage import BaseStage
 from configuration import run_configuration
+from data_functions import get_dictionary_from_tokens, get_tokens_from_file
 
 import constants
 
@@ -11,20 +12,6 @@ from collections import Counter
 import json
 import logging
 
-
-def get_tokens_from_file(file_path):
-    """Helper function for getting tokens from file.
-
-    Args:
-        file_path: a path to the file.
-
-    Returns:
-        A list of tokens.
-    """
-    with open(file_path) as file:
-        text = file.read()
-        tokens = text.split(" ")
-    return tokens
 
 class DictionaryCreationStage(BaseStage):
     """Stage for creating a dictionary.
@@ -67,14 +54,7 @@ class DictionaryCreationStage(BaseStage):
         tokens = get_tokens_from_file(file_path)
 
         self.logger.info("Generating dictionary from loaded tokens...")
-        counter = Counter(tokens)
-        dictionary = {}
-        id = 0
-        for token in counter:
-            if counter[token] > self.frequency_threshold:
-                dictionary[token] = id
-                id += 1
-        dictionary["<<unk>>"] = id
+        dictionary = get_dictionary_from_tokens(tokens, self.frequency_threshold)
 
         self.logger.info("Dictionary contains {} tokens".format(len(dictionary)))
         self.logger.info("Saving dictionary...")

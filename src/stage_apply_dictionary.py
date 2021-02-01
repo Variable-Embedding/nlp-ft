@@ -2,6 +2,7 @@
 """
 from base_stage import BaseStage
 from configuration import run_configuration
+from data_functions import save_tokens_to_file, get_tokens_from_file
 
 import constants
 
@@ -10,32 +11,6 @@ from collections import Counter
 
 import json
 import logging
-
-
-def get_tokens_from_file(file_path):
-    """Helper function for getting tokens from file.
-
-    Args:
-        file_path: a path to the file.
-
-    Returns:
-        A list of tokens.
-    """
-    with open(file_path) as file:
-        text = file.read()
-        tokens = text.split(" ")
-    return tokens
-
-def save_tokens_to_file(tokens, file_path):
-    """Helper function for saving tokens to file.
-
-    Args:
-        tokens: a list of tokens.
-        file_path: a path to the file.
-    """
-    with open(file_path, "w") as file:
-        text = " ".join([str(t) for t in tokens])
-        file.write(text)
 
 def apply_dictionary(tokens, dictionary):
     """Applies dictionary to tokens.
@@ -47,7 +22,7 @@ def apply_dictionary(tokens, dictionary):
     Returns:
         A list of numbers generated.
     """
-    return [dictionary[t] for t in tokens]
+    return [dictionary[t][0] for t in tokens]
 
 class ApplyDictionaryStage(BaseStage):
     """Stage for applying dictionary on a text file.
@@ -101,9 +76,10 @@ class ApplyDictionaryStage(BaseStage):
         self.logger.info("Changed {} tokens".format(count))
 
         self.logger.info("Applying dictionary...")
-        tokens = [dictionary[t] for t in tokens]
+        mapped_tokens = apply_dictionary(tokens, dictionary)
 
         self.logger.info("Saving the result...")
         output_file_path = join(constants.DATA_PATH,
                                 "{}.{}".format(self.parent.topic, self.corpus_file))
+        save_tokens_to_file(mapped_tokens, output_file_path)
         return True
