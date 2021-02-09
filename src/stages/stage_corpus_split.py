@@ -1,9 +1,7 @@
 """Stage for scrapping the text data from the internet.
 """
-from base_stage import BaseStage
-from configuration import run_configuration
-
-import constants
+from src.stages.base_stage import BaseStage
+from src.util import constants
 
 from os.path import join
 
@@ -49,9 +47,9 @@ class CorpusSplitStage(BaseStage):
         with open(input_file_path, "r") as file:
             text = file.read()
 
-        text = re.sub("(\n)?<<article_start>>", "", text)
-        articles = text.split("<<article_end>>")
-        articles = ["<<article_start>>{}<<article_end>>".format(a) for a in articles]
+        text = re.sub("(\n)?<article_start>", "", text)
+        articles = text.split("<article_end>")
+        articles = ["<article_start>{}<article_end>".format(a) for a in articles]
         random.shuffle(articles)
         num_articles_for_split = [math.floor(len(articles) * (s["proportion"] / total_proportions))
                                   for s in self.splits]

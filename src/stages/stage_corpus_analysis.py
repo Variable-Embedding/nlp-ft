@@ -1,9 +1,7 @@
 """Stage for analysing a corpus.
 """
-from base_stage import BaseStage
-from configuration import run_configuration
-
-import constants
+from src.stages.base_stage import BaseStage
+from src.util import constants
 
 from collections import deque
 from copy import copy
@@ -76,7 +74,7 @@ class CorpusAnalysisStage(BaseStage):
         df = pd.DataFrame(tokens, columns=['text_orig'])
 
         def text_strip(x):
-            markers = ['<<', '>>']
+            markers = ['<', '>']
             if any(i in x for i in markers):
                 return x
             else:
@@ -91,11 +89,11 @@ class CorpusAnalysisStage(BaseStage):
 
         df['text_strp_punct'].replace('', np.nan, inplace=True)
         df = df[['text_strp_punct']].dropna()
-        df = df[~df['text_strp_punct'].str.contains("<<")]
+        df = df[~df['text_strp_punct'].str.contains("<")]
         df['text_strp_punct'] = df['text_strp_punct'].astype('string')
 
 
-        self.logger.info('Stripped Punctuation but not <<article_start>> or other tags')
+        self.logger.info('Stripped Punctuation but not <article_start> or other tags')
 
         df.rename(columns={'text_strp_punct': 'text'}, inplace=True)
         df.reset_index(drop=True, inplace=True)
@@ -195,7 +193,7 @@ class CorpusAnalysisStage(BaseStage):
         accu = []
 
         while corpus_text:
-            start_marker = ['<<article_start>>']
+            start_marker = ['<article_start>']
             curr = corpus_text.popleft()
 
             if any(m in curr for m in start_marker):

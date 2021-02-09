@@ -1,6 +1,6 @@
 # NLP pipeline
 
-This is an NLP pipeline.
+This is an NLP pipeline used for MSAI 337 course.
 
 ## Overview
 
@@ -8,9 +8,11 @@ This is a natural-language processing pipeline. Currently it supports these stag
 
 1. Scrape articles from the Wikipedia.
 2. Clean the scraped text.
-3. Perform a rudimentary analysis on the cleaned text.
-4. Split the text into training / testing / validation files.
-5. Perform frequency filtering.
+3. Split the text into training / testing / validation files.
+4. Pre-process text file.
+5. Build a dictionary from a text file.
+6. Apply a dictionary to convert text file to a list of integer tokens.
+7. Train RNN model on the list of tokens.
 
 ## Executing pipeline / workflow
 
@@ -24,9 +26,9 @@ To only scrap the wikipedia:
 make wikipedia-scraping
 ```
 
-To only run srilm model (only works if you run a scraper pipeline before):
+To run the RNN model:
 ```
-make srilm-model
+make model-our-data
 ```
 
 To clean the directory:

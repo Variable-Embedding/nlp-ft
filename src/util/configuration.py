@@ -1,6 +1,6 @@
 """Runs system configurations
 """
-import constants
+from src.util import constants
 
 import logging
 import sys

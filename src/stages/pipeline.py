@@ -1,9 +1,7 @@
 """Data pipeline / workflow.
 """
-from base_stage import BaseStage
-from configuration import run_configuration
-
-import constants
+from src.stages.base_stage import BaseStage
+from src.util import constants
 
 from os.path import join
 
@@ -49,8 +47,3 @@ class Pipeline(BaseStage):
                 return False
 
         return True
-
-if __name__ == "__main__":
-    pipeline = Pipeline()
-    run_configuration()
-    pipeline.execute()

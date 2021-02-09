@@ -1,9 +1,7 @@
 """Stage for scrapping the text data from the wikipedia.
 """
-from base_stage import BaseStage
-from configuration import run_configuration
-
-import constants
+from src.stages.base_stage import BaseStage
+from src.util import constants
 
 from os.path import join
 from SPARQLWrapper import SPARQLWrapper, JSON
@@ -51,7 +49,7 @@ def scrape_article(site, query_row, label_key, min_num_tokens=500):
         if num_tokens < min_num_tokens:
             result = ""
         else:
-            result = "<<article_start>> {} <<article_end>>\n".format(page.text)
+            result = "<article_start> {} <article_end>\n".format(page.text)
     except Exception:
         result = ""
     return result

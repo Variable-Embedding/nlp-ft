@@ -11,10 +11,3 @@ stages:
      proportion: 10
    - name: valid
      proportion: 10
-
-- name: corpus_analysis
-  corpus_file: train.txt
-- name: corpus_analysis
-  corpus_file: test.txt
-- name: corpus_analysis
-  corpus_file: valid.txt

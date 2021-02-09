@@ -1,31 +1,30 @@
 """Factory for stages.
 """
-from pipeline import Pipeline
-from stage_corpus_analysis import CorpusAnalysisStage
-from stage_corpus_split import CorpusSplitStage
-from stage_fandom_wiki_scraping import FandomWikiScrapingStage
-from stage_fandom_wiki_text_cleaning import FandomWikiTextCleaningStage
-from stage_dictionary_creation import DictionaryCreationStage
-from stage_apply_dictionary import ApplyDictionaryStage
-from stage_srilm_model import SRILMModelStage
-from stage_wikipedia_scraping import WikipediaScrapingStage
-from stage_wikipedia_text_cleaning import WikipediaTextCleaningStage
-
-import constants
+from src.stages.pipeline import Pipeline
+from src.stages.stage_apply_dictionary import ApplyDictionaryStage
+from src.stages.stage_corpus_analysis import CorpusAnalysisStage
+from src.stages.stage_corpus_split import CorpusSplitStage
+from src.stages.stage_dictionary_creation import DictionaryCreationStage
+from src.stages.stage_pre_processing import PreProcessingStage
+from src.stages.stage_train_rnn_model import TrainRnnModelStage
+from src.stages.stage_wikipedia_scraping import WikipediaScrapingStage
+from src.stages.stage_wikipedia_text_cleaning import WikipediaTextCleaningStage
+from src.util import constants
 
 from os.path import join
 
 import yaml
 
-possible_stages = [ApplyDictionaryStage,
-                   CorpusAnalysisStage,
-                   CorpusSplitStage,
-                   DictionaryCreationStage,
-                   FandomWikiScrapingStage,
-                   FandomWikiTextCleaningStage,
-                   SRILMModelStage,
-                   WikipediaScrapingStage,
-                   WikipediaTextCleaningStage]
+possible_stages = [
+    ApplyDictionaryStage,
+    CorpusAnalysisStage,
+    CorpusSplitStage,
+    DictionaryCreationStage,
+    PreProcessingStage,
+    TrainRnnModelStage,
+    WikipediaScrapingStage,
+    WikipediaTextCleaningStage,
+]
 stage_name_mapping = {s.name: s for s in possible_stages}
 
 def create_stage(stage_config):
@@ -68,6 +67,6 @@ def create_pipeline_from_config(config_filename="pipeline_config.yaml", topic="d
     """
     config_filepath = join(constants.CONFIG_PATH, config_filename)
     with open(config_filepath) as file:
-        pipeline_config = yaml.load(file, Loader=yaml.FullLoader)
+        pipeline_config = yaml.safe_load(file)
         pipeline = create_pipeline(pipeline_config, topic)
     return pipeline

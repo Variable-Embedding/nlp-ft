@@ -1,11 +1,13 @@
 matplotlib
 nltk
 pandas
+progressbar2
 pywikibot
 pyyaml
 requests
 seaborn
 sidetable
 sparqlwrapper
+torch
 wiki-dump-reader
 wordcloud

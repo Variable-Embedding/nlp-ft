@@ -1,11 +1,8 @@
 """Stage for scrapping the text data from the wikipedia.
 """
-from base_stage import BaseStage
-from configuration import run_configuration
+from src.stages.base_stage import BaseStage
+from src.util import constants
 
-import constants
-
-from nltk.stem import WordNetLemmatizer
 from nltk.tokenize import word_tokenize
 from os.path import join
 from wiki_dump_reader import Cleaner
@@ -14,9 +11,6 @@ import logging
 import nltk
 import re
 
-
-nltk.download('punkt')
-nltk.download('wordnet')
 
 class WikipediaTextCleaningStage(BaseStage):
     """Stage for cleaning wikipedia text data.
@@ -49,11 +43,13 @@ class WikipediaTextCleaningStage(BaseStage):
 
         self.logger.info("Cleaning the markup and applying token-wise operations")
         lemmatizer = WordNetLemmatizer()
-        articles = text.split("<<article_end>>")
+        articles = text.split("<article_end>")
         for i in range(len(articles)):
             article = articles[i]
             # Removing special tokens
-            article = re.sub('<<article_start>>', '', article)
+            article = re.sub('<article_start>', '', article)
+            # Changing new lines
+            article = re.sub('\n\s*', ' new_line_character ', article)
             # Removing wikipedia markup
             article = cleaner.clean_text(article)
             # Removing left out >
@@ -62,32 +58,21 @@ class WikipediaTextCleaningStage(BaseStage):
             article = re.sub('\[{2}(.*?)(\|[\w\s\|]*)?\]{2}', '\\1', article)
             # Removing |
             article = re.sub('\|', ' ', article)
+            # Adding end of paragraph.
 
             tokens = word_tokenize(article)
             for j in range(len(tokens)):
                 token = tokens[j]
-                token = token.lower()
                 token = token.encode("ascii", "ignore")
                 token = token.decode()
-                token = lemmatizer.lemmatize(token)
                 tokens[j] = token
             article = " ".join(tokens)
+            # Bringing back new lines
+            article = re.sub('new_line_character', ' \n ', article)
+            article = re.sub('\s*\n\s*', '\n', article)
 
-            articles[i] = "<<article_start>> {} <<article_end>>".format(article)
+            articles[i] = "<article_start> {} <article_end>".format(article)
         text = " ".join(articles)
-
-        self.logger.info("Changing years to <<year>>")
-        text = re.sub(' \d{4}(\-\d+|s)?', ' <<year>>', text)
-
-        self.logger.info("Changing numbers to <<number>>")
-        text = re.sub(' \d[\d\.,%]*(st|nd|rd|th| %)?', ' <<number>>', text)
-        text = re.sub('<<number>>\-[\d\.,%]+', '<<number>>', text)
-
-        self.logger.info("Section title formatting")
-        text = re.sub('==+(.*?)==+', '<<section_title_start>> \\1 <<section_title_end>>', text)
-
-        self.logger.info("Removing extra white-spaces")
-        text = re.sub('\s\s+', ' ', text)
 
         with open(output_file_path, "w") as file:
             file.write(text)

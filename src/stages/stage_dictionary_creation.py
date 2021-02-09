@@ -1,10 +1,9 @@
 """Stage for creating a dictionary for a corpora.
 """
-from base_stage import BaseStage
-from configuration import run_configuration
-from data_functions import get_dictionary_from_tokens, get_tokens_from_file
-
-import constants
+from src.stages.base_stage import BaseStage
+from src.util import constants
+from src.util.file import get_tokens_from_file
+from src.util.dictionary import get_dictionary_from_tokens, dictionary_file_path
 
 from os.path import join
 from collections import Counter
@@ -19,7 +18,7 @@ class DictionaryCreationStage(BaseStage):
     name = "dictionary_creation"
     logger = logging.getLogger("pipeline").getChild("dictionary_creation_stage")
 
-    def __init__(self, parent=None, corpus_file=None, frequency_threshold=0):
+    def __init__(self, parent=None, input_file=None, frequency_threshold=0):
         """Initialization for dictionary creation stage.
 
         Args:
@@ -29,7 +28,7 @@ class DictionaryCreationStage(BaseStage):
         """
         super(DictionaryCreationStage, self).__init__(parent)
         self.frequency_threshold = frequency_threshold
-        self.corpus_file = corpus_file
+        self.input_file = input_file
 
     def pre_run(self):
         """The function that is executed before the stage is run.
@@ -40,7 +39,7 @@ class DictionaryCreationStage(BaseStage):
         self.logger.info("=" * 40)
         self.logger.info("Executing dictionary creation stage.")
         self.logger.info("Frequency Threshold: {}".format(self.frequency_threshold))
-        self.logger.info("Target file: {}".format(self.corpus_file))
+        self.logger.info("Target file: {}".format(self.input_file))
         self.logger.info("-" * 40)
 
     def run(self):
@@ -50,7 +49,7 @@ class DictionaryCreationStage(BaseStage):
             True if the stage execution succeded, False otherwise.
         """
         self.logger.info("Loading tokens from corpus...")
-        file_path = join(constants.TMP_PATH, "{}.{}".format(self.parent.topic, self.corpus_file))
+        file_path = join(constants.TMP_PATH, "{}.{}".format(self.parent.topic, self.input_file))
         tokens = get_tokens_from_file(file_path)
 
         self.logger.info("Generating dictionary from loaded tokens...")
@@ -58,8 +57,6 @@ class DictionaryCreationStage(BaseStage):
 
         self.logger.info("Dictionary contains {} tokens".format(len(dictionary)))
         self.logger.info("Saving dictionary...")
-        dictionary_file_path = join(constants.DATA_PATH,
-                                    "{}.dictionary.json".format(self.parent.topic))
-        with open(dictionary_file_path, 'w') as file:
+        with open(dictionary_file_path(self.parent.topic), 'w') as file:
             file.write(json.dumps(dictionary))
         return True
