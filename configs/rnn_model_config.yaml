@@ -5,3 +5,4 @@ max_init_param: 0.01
 max_norm: 5
 number_of_layers: 1
 sequence_length: 35
+device: gpu

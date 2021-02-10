@@ -23,8 +23,8 @@ def generate_initial_states(model, batch_size=None):
         batch_size = model.batch_size
 
     return [
-        (torch.zeros(1, batch_size, layer.hidden_size),
-         torch.zeros(1, batch_size, layer.hidden_size))
+        (torch.zeros(1, batch_size, layer.hidden_size, device=model.device),
+         torch.zeros(1, batch_size, layer.hidden_size, device=model.device))
         for layer in model.rnns
     ]
 
@@ -91,6 +91,7 @@ def train_model(model, train_tokens, valid_tokens=None, number_of_epochs=1, logg
     Returns:
         A list of validation losses for each epoch (if validation tokens were provided).
     """
+    model.to(model.device)
     num_iters = len(train_tokens) // model.batch_size // model.sequence_length
     validation_losses = []
     counter = 0
@@ -131,6 +132,7 @@ def test_model(model, tokens):
     Returns:
         Preplexity score of the model
     """
+    model.to(model.device)
     losses = []
     num_iters = len(tokens) // model.batch_size // model.sequence_length
     counter = 0
@@ -182,7 +184,7 @@ class Embedding(nn.Module):
 class Model(nn.Module):
     def __init__(self, dictionary_size, embedding_size=10, number_of_layers=1, max_norm=0.0001,
                  droupout_probability=0.1, batch_size=64, sequence_length=5, learning_rate=0.0001,
-                 max_init_param=0.01):
+                 max_init_param=0.01, device="cpu"):
         """Initialization for the model.
 
         Args:
@@ -195,6 +197,7 @@ class Model(nn.Module):
             sequence_length: the token sequence length.
             learning_rate: the learning rate.
             max_init_param: the maximum weight after initialization.
+            device: the device on which the model will be. (either "cpu" or "gpu")
         """
         super().__init__()
         self.dictionary_size = dictionary_size
@@ -205,6 +208,11 @@ class Model(nn.Module):
         self.batch_size = batch_size
         self.sequence_length = sequence_length
         self.max_init_param = max_init_param
+
+        if device == "gpu" and torch.cuda.is_available():
+            self.device = torch.device("cuda")
+        else:
+            self.device =  torch.device("cpu")
 
         # Set up the architecture.
         self.embedding = Embedding(dictionary_size, embedding_size)
