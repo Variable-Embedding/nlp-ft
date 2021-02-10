@@ -2,7 +2,7 @@
 """
 from src.stages.base_stage import BaseStage
 from src.util import constants
-from src.util.file import save_tokens_to_file, get_tokens_from_file
+from src.util.file import save_integer_tokens_to_file, get_tokens_from_file
 from src.util.dictionary import apply_dictionary_to_tokens, change_to_unk, dictionary_file_path
 
 from os.path import join
@@ -64,5 +64,5 @@ class ApplyDictionaryStage(BaseStage):
         self.logger.info("Saving the result...")
         output_file_path = join(constants.TMP_PATH,
                                 "{}.{}".format(self.parent.topic, self.output_file))
-        save_tokens_to_file(mapped_tokens, output_file_path)
+        save_integer_tokens_to_file(mapped_tokens, output_file_path)
         return True

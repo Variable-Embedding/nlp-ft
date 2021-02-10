@@ -8,6 +8,7 @@ requests
 seaborn
 sidetable
 sparqlwrapper
+termplotlib
 torch
 wiki-dump-reader
 wordcloud

@@ -15,17 +15,17 @@ stages:
 
 - name: apply_dictionary
   input_file: pre_processed.train.txt
-  output_file: tokens.train.txt
+  output_file: tokens.train.pkl
 - name: apply_dictionary
   input_file: pre_processed.test.txt
-  output_file: tokens.test.txt
+  output_file: tokens.test.pkl
 - name: apply_dictionary
   input_file: pre_processed.valid.txt
-  output_file: tokens.valid.txt
+  output_file: tokens.valid.pkl
 
 - name: train_rnn_model
   training_config_file: rnn_training_config.yaml
   model_config_file: rnn_model_config.yaml
-  train_file: tokens.train.txt
-  valid_file: tokens.valid.txt
-  test_file: tokens.test.txt
+  train_file: tokens.train.pkl
+  valid_file: tokens.valid.pkl
+  test_file: tokens.test.pkl

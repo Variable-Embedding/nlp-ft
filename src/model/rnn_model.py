@@ -8,41 +8,156 @@ import numpy as np
 import progressbar
 import time
 
-def tokens_to_matrix(tokens, dictionary_size):
-    """Helper function for converting a list of integers to a matrix with [0, 0, ..., 0, 1, 0, 0].
+
+def generate_initial_states(model, batch_size=None):
+    """Helper function to generate initial state needed for the model.forward function
 
     Args:
-        tokens: tokens to convert.
-        dictionary_size: the size of the dictionary.
+        model: model for which the states are initialized.
+        batch_size: the batch size for states. If None will use model.batch_size.
 
     Returns:
-        np array with the result.
+        A list of tuples of torch.array.
     """
-    result = np.zeros((len(tokens), dictionary_size))
-    for i, token in enumerate(tokens):
-        result[i][token] = 1
-    return result
+    if batch_size is None:
+        batch_size = model.batch_size
 
-def train(model, train_tokens, valid_tokens=None, test_tokens=None, logger=None,
-          number_of_epochs=1):
+    return [
+        (torch.zeros(1, batch_size, layer.hidden_size),
+         torch.zeros(1, batch_size, layer.hidden_size))
+        for layer in model.rnns
+    ]
+
+def detach_states(states):
+    """Helper function for detaching the states.
+
+    Args:
+        states: states to detach.
+
+    Returns:
+        List of detached states.
+    """
+    return [(h.detach(), c.detach()) for h, c in states]
+
+def batch_data(tokens, model, batch_size=None):
+    """Helper function to batch the data.
+
+    Args:
+        data: the data to batch.
+        model: the model to batch for.
+        batch_size: the batch size, if None will use model.batch_size.
+
+    Returns:
+        Iterator for batched data.
+    """
+    if batch_size is None:
+        batch_size = model.batch_size
+    sequence_length = model.sequence_length
+    data = torch.tensor(tokens, dtype=torch.int64)
+    num_batches = data.size(0) // batch_size
+    data = data[:num_batches * batch_size]
+    data = data.view(model.batch_size, -1)
+    for sequence_start in range(0, data.size(1) - sequence_length, sequence_length):
+        sequence_end = sequence_start + sequence_length
+        prefix = data[:,sequence_start:sequence_end].transpose(1, 0)
+        target = data[:,sequence_start + 1:sequence_end + 1].transpose(1, 0)
+        yield prefix, target
+
+def loss_function(output, target):
+    """Loss function for the model.
+
+    Args:
+        output: the output of the model.
+        target: the expected tokens.
+
+    Returns:
+        Loss.
+    """
+    batch_size = target.size(1)
+    probabilities = F.softmax(output, dim=2).reshape(-1, output.size(2))
+    target_probabilities = probabilities[range(target.numel()), target.reshape(-1)]
+    return torch.mean(-torch.log(target_probabilities) * batch_size)
+
+def train_model(model, train_tokens, valid_tokens=None, number_of_epochs=1, logger=None):
     """Train the model in the train data.
 
     Args:
         model: the model to train.
         train_tokens: integer tokens for training.
         valid_tokens: integer tokens for validation.
-        test_tokens: integer tokens for testing.
-        logger: the logger to use.
         number_of_epochs: the number of epochs to run.
+        logger: logger to use for printing output.
+
+    Returns:
+        A list of validation losses for each epoch (if validation tokens were provided).
     """
-    train_data = tokens_to_matrix(train_tokens, model.dictionary_size)
-    valid_data = tokens_to_matrix(valid_tokens, model.dictionary_size) if valid_tokens else None
-    test_data = tokens_to_matrix(test_tokens, model.dictionary_size) if test_tokens else None
-    with progressbar.ProgressBar(max_value=number_of_epochs) as progress_bar:
+    num_iters = len(train_tokens) // model.batch_size // model.sequence_length
+    validation_losses = []
+    counter = 0
+    with progressbar.ProgressBar(max_value = number_of_epochs * num_iters) as progress_bar:
+        progress_bar.update(0)
         for epoch in range(number_of_epochs):
-            # TODO(someone): implement training here.
-            time.sleep(1)
-            progress_bar.update(epoch + 1)
+            states = generate_initial_states(model)
+            model.train()
+            for prefix, target in batch_data(train_tokens, model):
+                model.zero_grad()
+                states = detach_states(states)
+                output, states = model(prefix, states)
+                loss = loss_function(output, target)
+                loss.backward()
+                with torch.no_grad():
+                    norm = nn.utils.clip_grad_norm_(model.parameters(), model.max_norm)
+                    for param in model.parameters():
+                        param -= model.learning_rate * param.grad
+
+                counter += 1
+                progress_bar.update(counter)
+
+            if not valid_tokens is None:
+                validataion_loss = test_model(model, valid_tokens)
+                if not logger is None:
+                    logger.info("Epoch #{}, Validation preplexity: {}".format(epoch + 1,
+                                                                              validataion_loss))
+                validation_losses.append(validataion_loss)
+    return validation_losses
+
+def test_model(model, tokens):
+    """Test the model on the tokens.
+
+    Args:
+        model: model to test.
+        tokens: the tokens to test the model on.
+
+    Returns:
+        Preplexity score of the model
+    """
+    losses = []
+    num_iters = len(tokens) // model.batch_size // model.sequence_length
+    counter = 0
+    states = generate_initial_states(model)
+    model.eval()
+    for prefix, target in batch_data(tokens, model):
+        counter += 1
+        output, states = model(prefix, states)
+        losses.append(loss_function(output, target).item() / model.batch_size)
+    return np.exp(np.mean(losses))
+
+def complete_sequence(model, prefix_tokens, sequence_end_token):
+    """Using rnn language model, to complete the sequence.
+
+    Args:
+        model: the trained rnn language model.
+        prefix_tokens: the start of the sequence.
+        sequence_end_token: the token that specifies the end of the sequence.
+
+    Returns:
+        A list of tokens that go after the prefix tokens until sequence end token.
+    """
+    state = generate_initial_states(model, 1)
+    prefix_tokens = torch.tensor(prefix_tokens)
+    model.eval()
+    # TODO(someone): implement this.
+    return [sequence_end_token]
 
 
 class Embedding(nn.Module):
@@ -58,34 +173,52 @@ class Embedding(nn.Module):
         super().__init__()
         self.dictionary_size = dictionary_size
         self.embedding_size = embedding_size
-        self.linear = nn.Parameter(torch.Tensor(dictionary_size, embedding_size))
+        self.embedding = nn.Parameter(torch.Tensor(dictionary_size, embedding_size))
 
     def forward(self, X):
-        return self.linear(X)
+        return self.embedding[X]
+
 
 class Model(nn.Module):
-    def __init__(self, dictionary_size, embedding_size=10, number_of_layers=1,
-                 droupout_probability=0.1):
+    def __init__(self, dictionary_size, embedding_size=10, number_of_layers=1, max_norm=0.0001,
+                 droupout_probability=0.1, batch_size=64, sequence_length=5, learning_rate=0.0001,
+                 max_init_param=0.01):
         """Initialization for the model.
 
         Args:
             dictionary_size: number of words in the dictionary.
             embedding_size: number of features in the embedding space.
             number_of_layers: number of LSTM layers.
+            max_norm: the maximum norm for the backward propagation.
             droupout_probability: the probability for dropping individual node in the network.
+            batch_size: the batch size for the model.
+            sequence_length: the token sequence length.
+            learning_rate: the learning rate.
+            max_init_param: the maximum weight after initialization.
         """
         super().__init__()
         self.dictionary_size = dictionary_size
         self.embedding_size = embedding_size
         self.number_of_layers = number_of_layers
+        self.max_norm = max_norm
+        self.learning_rate = learning_rate
+        self.batch_size = batch_size
+        self.sequence_length = sequence_length
+        self.max_init_param = max_init_param
+
+        # Set up the architecture.
         self.embedding = Embedding(dictionary_size, embedding_size)
         rnns = [nn.LSTM(embedding_size, embedding_size) for _ in range(number_of_layers)]
         self.rnns = nn.ModuleList(rnns)
         self.fc = nn.Linear(embedding_size, dictionary_size)
         self.dropout = nn.Dropout(p=droupout_probability)
 
+        # Set initial weights.
+        for param in self.parameters():
+            nn.init.uniform_(param, -max_init_param, max_init_param)
+
     def forward(self, X, states):
-        X = self.embed(X)
+        X = self.embedding(X)
         X = self.dropout(X)
         for i, rnn in enumerate(self.rnns):
             X, states[i] = rnn(X, states[i])

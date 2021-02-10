@@ -1,16 +1,17 @@
 """Stage for pre-processing text.
 """
-from src.model.rnn_model import train, Model
+from src.model.rnn_model import train_model, test_model, Model, complete_sequence
 from src.stages.base_stage import BaseStage
 from src.util import constants
 from src.util.dictionary import dictionary_file_path
-from src.util.file import get_tokens_from_file
+from src.util.file import get_integer_tokens_from_file
 
 from os.path import join
 
 import json
 import logging
 import re
+import termplotlib as tpl
 import torch
 import yaml
 
@@ -63,13 +64,13 @@ class TrainRnnModelStage(BaseStage):
 
         self.logger.info("Loading training tokens...")
         file_path = join(constants.TMP_PATH, "{}.{}".format(self.parent.topic, self.train_file))
-        train_tokens = list(map(int, get_tokens_from_file(file_path)))
+        train_tokens = list(map(int, get_integer_tokens_from_file(file_path)))
         self.logger.info("Loaded {} tokens.".format(len(train_tokens)))
 
         if self.test_file:
             self.logger.info("Loading testing tokens...")
             file_path = join(constants.TMP_PATH, "{}.{}".format(self.parent.topic, self.test_file))
-            test_tokens = list(map(int, get_tokens_from_file(file_path)))
+            test_tokens = list(map(int, get_integer_tokens_from_file(file_path)))
             self.logger.info("Loaded {} tokens.".format(len(test_tokens)))
         else:
             test_tokens = None
@@ -77,7 +78,7 @@ class TrainRnnModelStage(BaseStage):
         if self.valid_file:
             self.logger.info("Loading validation tokens...")
             file_path = join(constants.TMP_PATH, "{}.{}".format(self.parent.topic, self.valid_file))
-            valid_tokens = list(map(int, get_tokens_from_file(file_path)))
+            valid_tokens = list(map(int, get_integer_tokens_from_file(file_path)))
             self.logger.info("Loaded {} tokens.".format(len(valid_tokens)))
         else:
             valid_tokens = None
@@ -85,13 +86,23 @@ class TrainRnnModelStage(BaseStage):
         self.logger.info("Loading dictionary...")
         with open(dictionary_file_path(self.parent.topic)) as file:
             dictionary = json.loads(file.read())
+        self.logger.info("Dictionary contains {} tokens.".format(len(dictionary)))
 
         model = Model(dictionary_size=len(dictionary), **model_config)
         self.logger.info("Starting model training...")
-        train(model=model, train_tokens=train_tokens, valid_tokens=valid_tokens,
-              test_tokens=test_tokens, logger=self.logger, **training_config)
+        losses = train_model(model=model, train_tokens=train_tokens, valid_tokens=valid_tokens,
+                             logger=self.logger, **training_config)
+        self.logger.info("Finished model training.")
+        self.logger.info("Saving the model...")
         file_path = join(constants.DATA_PATH, "{}.model.pkl".format(self.parent.topic))
-        self.logger.info("Saving the model.")
         torch.save(model, file_path)
 
+        self.logger.info("Performing model evaluation...")
+        self.logger.info("Test preplexity score: {}".format(test_model(model, test_tokens)))
+        self.logger.info("Train preplexity score: {}".format(test_model(model, train_tokens)))
+        self.logger.info("Valid preplexity score: {}".format(losses[-1]))
+
+        fig = tpl.figure()
+        fig.plot(range(1, len(losses) + 1), losses, xlabel="epoch", label="validation preplexity")
+        fig.show()
         return True
