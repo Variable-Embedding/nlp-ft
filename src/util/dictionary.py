@@ -33,7 +33,7 @@ def get_dictionary_from_tokens(tokens, frequency_threshold):
     id = 0
     unk_count = 0
     for token in counter:
-        if counter[token] > frequency_threshold:
+        if counter[token] >= frequency_threshold:
             dictionary[token] = (id, counter[token])
             id += 1
         else:
