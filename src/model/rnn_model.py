@@ -114,6 +114,8 @@ def train_model(model, train_tokens, valid_tokens=None, number_of_epochs=1, logg
 
                 counter += 1
                 progress_bar.update(counter)
+                del prefix
+                del target
 
             if not valid_tokens is None:
                 validataion_loss = test_model(model, valid_tokens)
@@ -140,6 +142,8 @@ def test_model(model, tokens):
     for prefix, target in batch_data(tokens, model, 1, len(tokens) - 1):
         output, states = model(prefix, states)
         losses.append(loss_function(output, target).item())
+        del prefix
+        del target
     return np.exp(np.mean(losses))
 
 def complete_sequence(model, prefix_tokens, sequence_end_token):
