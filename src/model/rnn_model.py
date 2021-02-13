@@ -218,7 +218,7 @@ class Model(nn.Module):
         rnns = [nn.LSTM(embedding_size, embedding_size) for _ in range(number_of_layers)]
         self.rnns = nn.ModuleList(rnns)
         self.fc = nn.Linear(embedding_size, dictionary_size)
-        self.dropout = nn.Dropout(p=droupout_probability)
+        self.dropout = nn.Dropout(p=dropout_probability)
 
         # Set initial weights.
         for param in self.parameters():
