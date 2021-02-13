@@ -42,7 +42,6 @@ class WikipediaTextCleaningStage(BaseStage):
         text = re.sub('&nbsp', '', text)
 
         self.logger.info("Cleaning the markup and applying token-wise operations")
-        lemmatizer = WordNetLemmatizer()
         articles = text.split("<article_end>")
         for i in range(len(articles)):
             article = articles[i]

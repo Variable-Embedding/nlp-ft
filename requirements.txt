@@ -1,4 +1,5 @@
 matplotlib
+mwparserfromhell
 nltk
 pandas
 progressbar2

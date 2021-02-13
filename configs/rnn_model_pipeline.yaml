@@ -11,7 +11,7 @@ stages:
 
 - name: dictionary_creation
   input_file: pre_processed.train.txt
-  frequency_threshold: 5
+  frequency_threshold: 3
 
 - name: apply_dictionary
   input_file: pre_processed.train.txt
