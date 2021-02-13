@@ -1,7 +1,7 @@
 PYTHON = python3
 PIP = pip3
 
-run: prep wikipedia-scraping model-our-data model-given-data
+run: prep model-our-data model-given-data
 
 model-our-data: prep
 	$(PYTHON) main.py --config-file rnn_model_pipeline.yaml --topic=countries

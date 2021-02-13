@@ -8,4 +8,3 @@ SELECT ?country ?countryLabel ?article WHERE {
        bd:serviceParam wikibase:language "en"
     }
 }
-LIMIT 20
