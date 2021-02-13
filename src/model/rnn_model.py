@@ -147,7 +147,7 @@ def test_model(model, tokens):
     losses = []
     states = generate_initial_states(model)
     model.eval()
-    for prefix, target in batch_data(tokens, model, sequence_length=len(tokens) // model.batch_size - 1):
+    for prefix, target in batch_data(tokens, model):
         output, states = model(prefix, states)
         losses.append(loss_function(output, target).item() / model.batch_size)
         del prefix
