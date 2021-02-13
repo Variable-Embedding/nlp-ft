@@ -56,7 +56,7 @@ def batch_data(tokens, model, batch_size=None):
     data = torch.tensor(tokens, dtype=torch.int64)
     num_batches = data.size(0) // batch_size
     data = data[:num_batches * batch_size]
-    data = data.view(model.batch_size, -1)
+    data = data.view(batch_size, -1)
     for sequence_start in range(0, data.size(1) - sequence_length, sequence_length):
         sequence_end = sequence_start + sequence_length
         prefix = data[:,sequence_start:sequence_end].transpose(1, 0)
@@ -138,7 +138,7 @@ def test_model(model, tokens):
     model.eval()
     for prefix, target in batch_data(tokens, model, 1):
         output, states = model(prefix, states)
-        losses.append(loss_function(output, target).item() / model.batch_size)
+        losses.append(loss_function(output, target).item())
     return np.exp(np.mean(losses))
 
 def complete_sequence(model, prefix_tokens, sequence_end_token):

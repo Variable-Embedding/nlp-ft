@@ -12,6 +12,7 @@ import json
 import logging
 import re
 import termplotlib as tpl
+import matplotlib as plt
 import torch
 import yaml
 
@@ -102,7 +103,6 @@ class TrainRnnModelStage(BaseStage):
         self.logger.info("Train preplexity score: {}".format(test_model(model, train_tokens)))
         self.logger.info("Valid preplexity score: {}".format(losses[-1]))
 
-        fig = tpl.figure()
-        fig.plot(range(1, len(losses) + 1), losses, xlabel="epoch", label="validation preplexity")
-        fig.show()
+        plt.plot(range(1, len(losses) + 1), losses, label="validation preplexity")
+        plt.show()
         return True
