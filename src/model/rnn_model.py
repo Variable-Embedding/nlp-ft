@@ -60,8 +60,8 @@ def batch_data(tokens, model, batch_size=None, sequence_length=None):
     data = data.view(batch_size, -1)
     for sequence_start in range(0, data.size(1) - sequence_length, model.sequence_step_size):
         sequence_end = sequence_start + sequence_length
-        prefix = data[:,sequence_start:sequence_end].transpose(1, 0).to(model.device)
-        target = data[:,sequence_start + 1:sequence_end + 1].transpose(1, 0).to(model.device)
+        prefix = data[:,sequence_start:sequence_end].transpose(1, 0)
+        target = data[:,sequence_start + 1:sequence_end + 1].transpose(1, 0)
         yield prefix, target
 
 def loss_function(output, target):
