@@ -11,6 +11,12 @@ import pandas as pd
 import requests
 import pywikibot
 
+# Disable pywikibot logging.
+# This should not be this complicated.
+def empty_func():
+    pass
+pywikibot.bot.writelogheader = empty_func
+
 
 def get_article_list(sparql_file_path):
     """Helper function that performs sparql query to find the articles for scrapping.
