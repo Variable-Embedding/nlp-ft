@@ -12,7 +12,7 @@ import json
 import logging
 import re
 import termplotlib as tpl
-import matplotlib as plt
+import matplotlib.pyplot as plt
 import torch
 import yaml
 
