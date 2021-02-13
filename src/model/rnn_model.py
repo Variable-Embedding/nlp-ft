@@ -60,8 +60,8 @@ def batch_data(tokens, model, batch_size=None, sequence_length=None):
     data = data.view(batch_size, -1)
     for sequence_start in range(0, data.size(1) - sequence_length, model.sequence_step_size):
         sequence_end = sequence_start + sequence_length
-        prefix = data[:,sequence_start:sequence_end].transpose(1, 0)
-        target = data[:,sequence_start + 1:sequence_end + 1].transpose(1, 0)
+        prefix = data[:,sequence_start:sequence_end].transpose(1, 0).to(model.device)
+        target = data[:,sequence_start + 1:sequence_end + 1].transpose(1, 0).to(model.device)
         yield prefix, target
 
 def loss_function(output, target):
@@ -117,7 +117,8 @@ def train_model(model, train_tokens, valid_tokens=None, number_of_epochs=1, logg
                 with torch.no_grad():
                     norm = nn.utils.clip_grad_norm_(model.parameters(), model.max_norm)
                     for param in model.parameters():
-                        param -= model.learning_rate * param.grad
+                        lr = model.learning_rate * (model.learning_rate_decay ** epoch)
+                        param -= lr * param.grad
 
                 counter += 1
                 progress_bar.update(counter)
@@ -146,7 +147,7 @@ def test_model(model, tokens):
     losses = []
     states = generate_initial_states(model)
     model.eval()
-    for prefix, target in batch_data(tokens, model):
+    for prefix, target in batch_data(tokens, model, sequence_length=len(tokens) // model.batch_size - 1):
         output, states = model(prefix, states)
         losses.append(loss_function(output, target).item() / model.batch_size)
         del prefix
@@ -193,7 +194,7 @@ class Embedding(nn.Module):
 class Model(nn.Module):
     def __init__(self, dictionary_size, embedding_size=10, number_of_layers=1, max_norm=0.0001,
                  droupout_probability=0.1, batch_size=64, sequence_length=5, learning_rate=0.0001,
-                 max_init_param=0.01, device="cpu", sequence_step_size=None):
+                 max_init_param=0.01, device="cpu", sequence_step_size=None, learning_rate_decay=1):
         """Initialization for the model.
 
         Args:
@@ -207,6 +208,7 @@ class Model(nn.Module):
             learning_rate: the learning rate.
             max_init_param: the maximum weight after initialization.
             device: the device on which the model will be. (either "cpu" or "gpu")
+            learning_rate_decay: learning rate decay
         """
         super().__init__()
         self.dictionary_size = dictionary_size
@@ -217,6 +219,7 @@ class Model(nn.Module):
         self.batch_size = batch_size
         self.sequence_length = sequence_length
         self.max_init_param = max_init_param
+        self.learning_rate_decay = learning_rate_decay
 
         if sequence_step_size is None:
             self.sequence_step_size = sequence_length

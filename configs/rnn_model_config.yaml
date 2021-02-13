@@ -1,9 +1,10 @@
 batch_size: 128
 embedding_size: 128
-learning_rate: 0.001
+learning_rate: 0.1
+learning_rate_decay: 0.8
 max_init_param: 0.01
-max_norm: 5
+max_norm: 50
 number_of_layers: 2
 sequence_length: 25
-sequence_step_size: 5
+sequence_step_size: 5 
 device: gpu
