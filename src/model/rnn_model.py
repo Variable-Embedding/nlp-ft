@@ -39,7 +39,7 @@ def detach_states(states):
     """
     return [(h.detach(), c.detach()) for h, c in states]
 
-def batch_data(tokens, model, batch_size=None):
+def batch_data(tokens, model, batch_size=None, sequence_length=None):
     """Helper function to batch the data.
 
     Args:
@@ -52,12 +52,13 @@ def batch_data(tokens, model, batch_size=None):
     """
     if batch_size is None:
         batch_size = model.batch_size
-    sequence_length = model.sequence_length
+    if sequence_length is None:
+        sequence_length = model.sequence_length
     data = torch.tensor(tokens, dtype=torch.int64)
     num_batches = data.size(0) // batch_size
     data = data[:num_batches * batch_size]
     data = data.view(batch_size, -1)
-    for sequence_start in range(0, data.size(1) - sequence_length, sequence_length):
+    for sequence_start in range(0, data.size(1) - sequence_length, model.sequence_step_size):
         sequence_end = sequence_start + sequence_length
         prefix = data[:,sequence_start:sequence_end].transpose(1, 0)
         target = data[:,sequence_start + 1:sequence_end + 1].transpose(1, 0)
@@ -92,7 +93,7 @@ def train_model(model, train_tokens, valid_tokens=None, number_of_epochs=1, logg
         A list of validation losses for each epoch (if validation tokens were provided).
     """
     model.to(model.device)
-    num_iters = len(train_tokens) // model.batch_size // model.sequence_length
+    num_iters = len(train_tokens) // model.batch_size // model.sequence_step_size
     validation_losses = []
     counter = 0
     with progressbar.ProgressBar(max_value = number_of_epochs * num_iters) as progress_bar:
@@ -117,7 +118,7 @@ def train_model(model, train_tokens, valid_tokens=None, number_of_epochs=1, logg
             if not valid_tokens is None:
                 validataion_loss = test_model(model, valid_tokens)
                 if not logger is None:
-                    logger.info("Epoch #{}, Validation preplexity: {}".format(epoch + 1,
+                    logger.info("Epoch #{}, Validation preplexity: {:.1f}".format(epoch + 1,
                                                                               validataion_loss))
                 validation_losses.append(validataion_loss)
     return validation_losses
@@ -136,7 +137,7 @@ def test_model(model, tokens):
     losses = []
     states = generate_initial_states(model, 1)
     model.eval()
-    for prefix, target in batch_data(tokens, model, 1):
+    for prefix, target in batch_data(tokens, model, 1, len(tokens) - 1):
         output, states = model(prefix, states)
         losses.append(loss_function(output, target).item())
     return np.exp(np.mean(losses))
@@ -181,7 +182,7 @@ class Embedding(nn.Module):
 class Model(nn.Module):
     def __init__(self, dictionary_size, embedding_size=10, number_of_layers=1, max_norm=0.0001,
                  droupout_probability=0.1, batch_size=64, sequence_length=5, learning_rate=0.0001,
-                 max_init_param=0.01, device="cpu"):
+                 max_init_param=0.01, device="cpu", sequence_step_size=None):
         """Initialization for the model.
 
         Args:
@@ -205,6 +206,11 @@ class Model(nn.Module):
         self.batch_size = batch_size
         self.sequence_length = sequence_length
         self.max_init_param = max_init_param
+
+        if sequence_step_size is None:
+            self.sequence_step_size = sequence_length
+        else:
+            self.sequence_step_size = sequence_step_size
 
         if device == "gpu" and torch.cuda.is_available():
             self.device = torch.device("cuda")
