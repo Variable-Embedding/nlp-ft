@@ -80,12 +80,12 @@ class PreProcessingStage(BaseStage):
             articles[i] = "<article_start> {} <article_end>".format(article)
         text = " ".join(articles)
 
-        self.logger.info("Changing years to <year>")
-        text = re.sub(' \d{4}(\-\d+|s)?', ' <year> ', text)
+        #self.logger.info("Changing years to <year>")
+        #text = re.sub(' \d{4}(\-\d+|s)?', ' <year> ', text)
 
-        self.logger.info("Changing numbers to <number>")
-        text = re.sub(' \d[\d\.,%]*(st|nd|rd|th| %)?', ' <number>', text)
-        text = re.sub('<number>\-[\d\.\\,%]+', ' <number> ', text)
+        #self.logger.info("Changing numbers to <number>")
+        #text = re.sub(' \d[\d\.,%]*(st|nd|rd|th| %)?', ' <number>', text)
+        #text = re.sub('<number>\-[\d\.\\,%]+', ' <number> ', text)
 
         self.logger.info("Section title formatting")
         text = re.sub('==+(.*?)==+', '<section_title_start> \\1 <section_title_end>', text)
