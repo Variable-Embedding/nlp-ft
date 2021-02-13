@@ -137,11 +137,11 @@ def test_model(model, tokens):
     """
     model.to(model.device)
     losses = []
-    states = generate_initial_states(model, 1)
+    states = generate_initial_states(model)
     model.eval()
-    for prefix, target in batch_data(tokens, model, 1, len(tokens) - 1):
+    for prefix, target in batch_data(tokens, model):
         output, states = model(prefix, states)
-        losses.append(loss_function(output, target).item())
+        losses.append(loss_function(output, target).item() / model.batch_size)
         del prefix
         del target
     return np.exp(np.mean(losses))
