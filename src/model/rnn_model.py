@@ -75,9 +75,10 @@ def loss_function(output, target):
         Loss.
     """
     batch_size = target.size(1)
-    probabilities = F.softmax(output, dim=2).reshape(-1, output.size(2))
-    target_probabilities = probabilities[range(target.numel()), target.reshape(-1)]
-    return torch.mean(-torch.log(target_probabilities) * batch_size)
+    return F.cross_entropy(output.reshape(-1, output.size(2)), target.reshape(-1)) * batch_size
+    #probabilities = F.softmax(output, dim=2).reshape(-1, output.size(2))
+    #target_probabilities = probabilities[range(target.numel()), target.reshape(-1)]
+    #return torch.mean(-torch.log(target_probabilities) * batch_size)
 
 def train_model(model, train_tokens, valid_tokens=None, number_of_epochs=1, logger=None):
     """Train the model in the train data.
@@ -172,25 +173,6 @@ def complete_sequence(model, prefix_tokens, sequence_end_token):
     return [sequence_end_token]
 
 
-class Embedding(nn.Module):
-    """The word to vector transformation.
-    """
-    def __init__(self, dictionary_size, embedding_size):
-        """Initialization for embedding.
-
-        Args:
-            dictionary_size: number of words in the dictionary.
-            embedding_size: number of features in the embedding space.
-        """
-        super().__init__()
-        self.dictionary_size = dictionary_size
-        self.embedding_size = embedding_size
-        self.embedding = nn.Parameter(torch.Tensor(dictionary_size, embedding_size))
-
-    def forward(self, X):
-        return self.embedding[X]
-
-
 class Model(nn.Module):
     def __init__(self, dictionary_size, embedding_size=10, number_of_layers=1, max_norm=0.0001,
                  droupout_probability=0.1, batch_size=64, sequence_length=5, learning_rate=0.0001,
@@ -232,7 +214,7 @@ class Model(nn.Module):
             self.device =  torch.device("cpu")
 
         # Set up the architecture.
-        self.embedding = Embedding(dictionary_size, embedding_size)
+        self.embedding = nn.Embedding(dictionary_size, embedding_size)
         rnns = [nn.LSTM(embedding_size, embedding_size) for _ in range(number_of_layers)]
         self.rnns = nn.ModuleList(rnns)
         self.fc = nn.Linear(embedding_size, dictionary_size)
