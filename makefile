@@ -7,7 +7,7 @@ model-our-data: prep
 	$(PYTHON) main.py --config-file rnn_model_pipeline.yaml --topic=countries
 
 model-given-data: prep
-	$(PYTHON) main.py --config-file rnn_model_pipeline.yaml --topic=wiki
+	$(PYTHON) main.py --config-file wiki_rnn_model_pipeline.yaml --topic=wiki
 
 wikipedia-scraping: prep
 	$(PYTHON) main.py --config-file wikipedia_scraping_pipeline.yaml --topic=countries
