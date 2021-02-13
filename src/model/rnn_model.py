@@ -175,7 +175,7 @@ def complete_sequence(model, prefix_tokens, sequence_end_token):
 
 class Model(nn.Module):
     def __init__(self, dictionary_size, embedding_size=10, number_of_layers=1, max_norm=0.0001,
-                 droupout_probability=0.1, batch_size=64, sequence_length=5, learning_rate=0.0001,
+                 dropout_probability=0.1, batch_size=64, sequence_length=5, learning_rate=0.0001,
                  max_init_param=0.01, device="cpu", sequence_step_size=None, learning_rate_decay=1):
         """Initialization for the model.
 
