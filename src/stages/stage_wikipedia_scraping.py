@@ -9,13 +9,13 @@ from SPARQLWrapper import SPARQLWrapper, JSON
 import logging
 import pandas as pd
 import requests
-import pywikibot
+#import pywikibot
 
 # Disable pywikibot logging.
 # This should not be this complicated.
 def empty_func():
     pass
-pywikibot.bot.writelogheader = empty_func
+#pywikibot.bot.writelogheader = empty_func
 
 
 def get_article_list(sparql_file_path):
