@@ -1,13 +1,13 @@
 PYTHON = python3
 PIP = pip3
 
-run: prep wikipedia-scraping model-our-data #model-given-data
+run: prep wikipedia-scraping model-our-data model-given-data
 
 model-our-data: prep
 	$(PYTHON) main.py --config-file rnn_model_pipeline.yaml --topic=countries
 
-#model-given-data: prep
-#	$(PYTHON) main.py --config-file rnn_model_pipeline.yaml --topic=wiki
+model-given-data: prep
+	$(PYTHON) main.py --config-file rnn_model_pipeline.yaml --topic=wiki
 
 wikipedia-scraping: prep
 	$(PYTHON) main.py --config-file wikipedia_scraping_pipeline.yaml --topic=countries
