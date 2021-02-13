@@ -103,6 +103,6 @@ class TrainRnnModelStage(BaseStage):
         self.logger.info("Train preplexity score: {}".format(test_model(model, train_tokens)))
         self.logger.info("Valid preplexity score: {}".format(losses[-1]))
 
-        plt.plot(range(1, len(losses) + 1), losses, label="validation preplexity")
+        plt.plot(range(len(losses) + 1), losses, label="validation preplexity")
         plt.show()
         return True

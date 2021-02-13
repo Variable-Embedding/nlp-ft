@@ -95,6 +95,13 @@ def train_model(model, train_tokens, valid_tokens=None, number_of_epochs=1, logg
     model.to(model.device)
     num_iters = len(train_tokens) // model.batch_size // model.sequence_step_size
     validation_losses = []
+
+    if not valid_tokens is None:
+        validataion_loss = test_model(model, valid_tokens)
+        if not logger is None:
+            logger.info("Epoch #0, Validation preplexity: {:.1f}".format(validataion_loss))
+        validation_losses.append(validataion_loss)
+
     counter = 0
     with progressbar.ProgressBar(max_value = number_of_epochs * num_iters) as progress_bar:
         progress_bar.update(0)
