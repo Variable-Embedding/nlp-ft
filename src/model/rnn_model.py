@@ -172,11 +172,24 @@ def complete_sequence(model, prefix_tokens, sequence_end_token):
     Returns:
         A list of tokens that go after the prefix tokens until sequence end token.
     """
+    prefix_tokens = torch.tensor(prefix_tokens).to(model.device)
     state = generate_initial_states(model, 1)
-    prefix_tokens = torch.tensor(prefix_tokens)
+    
+    max_iters = 10
+    i = 0
+    generated = [0]
     model.eval()
-    # TODO(someone): implement this.
-    return [sequence_end_token]
+    with torch.no_grad():
+        # Loop through and generate tokens
+        while  i < max_iters and generated[-1] != sequence_end_token:
+            i += 1
+            # Get output and append to generated
+            output, state = model(prefix_tokens, state)
+            generated.append(torch.argmax(output[-1]).item())
+            # Set prefix to new generated
+            prefix_tokens = torch.tensor([[generated[-1]]]).to(model.device)
+        
+    return generated[1:]
 
 
 class Model(nn.Module):
