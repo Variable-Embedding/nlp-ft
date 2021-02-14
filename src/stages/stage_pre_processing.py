@@ -65,6 +65,7 @@ class PreProcessingStage(BaseStage):
             article = re.sub('<article_start>', '', article)
             # Adding paragraph end tokens
             article = re.sub('\n\s*', ' new_line_character ', article)
+            article = re.sub('<unk>', ' unkown_token ', article)
 
             tokens = word_tokenize(article)
             for j in range(len(tokens)):
@@ -77,6 +78,7 @@ class PreProcessingStage(BaseStage):
             article = " ".join(tokens)
 
             article = re.sub('new_line_character', ' </s> ', article)
+            article = re.sub('unkown_token', '<unk>', article)
             articles[i] = "<article_start> {} <article_end>".format(article)
         text = " ".join(articles)
 
