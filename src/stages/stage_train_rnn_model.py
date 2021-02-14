@@ -91,8 +91,8 @@ class TrainRnnModelStage(BaseStage):
 
         model = Model(dictionary_size=len(dictionary), **model_config)
         self.logger.info("Starting model training...")
-        losses = train_model(model=model, train_tokens=train_tokens, valid_tokens=valid_tokens,
-                             logger=self.logger, **training_config)
+        train_losses, valid_losses = train_model(model=model, train_tokens=train_tokens, valid_tokens=valid_tokens,
+                                                 logger=self.logger, **training_config)
         self.logger.info("Finished model training.")
         self.logger.info("Saving the model...")
         file_path = join(constants.DATA_PATH, "{}.model.pkl".format(self.parent.topic))
@@ -101,8 +101,13 @@ class TrainRnnModelStage(BaseStage):
         self.logger.info("Performing model evaluation...")
         self.logger.info("Test preplexity score: {}".format(test_model(model, test_tokens)))
         self.logger.info("Train preplexity score: {}".format(test_model(model, train_tokens)))
-        self.logger.info("Valid preplexity score: {}".format(losses[-1]))
+        self.logger.info("Valid preplexity score: {}".format(valid_losses[-1]))
 
-        plt.plot(range(len(losses) + 1), losses, label="validation preplexity")
+        plt.plot(range(len(valid_losses)), losses, label="validation preplexity")
+        plt.plot(range(len(train_losses)), losses, label="training preplexity")
+        plt.xlabel("epoch")
+        plt.ylabel("preplexity")
+        plt.legend()
+        plt.savefig(join(constants.DATA_PATH, "{}.preplexity.png".format(self.parent.topic)))
         plt.show()
         return True

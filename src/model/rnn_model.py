@@ -95,6 +95,7 @@ def train_model(model, train_tokens, valid_tokens=None, number_of_epochs=1, logg
     """
     model.to(model.device)
     num_iters = len(train_tokens) // model.batch_size // model.sequence_step_size
+    training_losses = []
     validation_losses = []
 
     if not valid_tokens is None:
@@ -106,6 +107,7 @@ def train_model(model, train_tokens, valid_tokens=None, number_of_epochs=1, logg
     counter = 0
     with progressbar.ProgressBar(max_value = number_of_epochs * num_iters) as progress_bar:
         progress_bar.update(0)
+        t_losses = []
         for epoch in range(number_of_epochs):
             states = generate_initial_states(model)
             model.train()
@@ -114,6 +116,7 @@ def train_model(model, train_tokens, valid_tokens=None, number_of_epochs=1, logg
                 states = detach_states(states)
                 output, states = model(prefix, states)
                 loss = loss_function(output, target)
+                t_losses.append(loss.item() / model.batch_size)
                 loss.backward()
                 with torch.no_grad():
                     norm = nn.utils.clip_grad_norm_(model.parameters(), model.max_norm)
@@ -126,13 +129,14 @@ def train_model(model, train_tokens, valid_tokens=None, number_of_epochs=1, logg
                 del prefix
                 del target
 
+            training_losses.apppend(np.mean(t_losses))
             if not valid_tokens is None:
                 validataion_loss = test_model(model, valid_tokens)
                 if not logger is None:
                     logger.info("Epoch #{}, Validation preplexity: {:.1f}".format(epoch + 1,
                                                                               validataion_loss))
                 validation_losses.append(validataion_loss)
-    return validation_losses
+    return training_losses, validation_losses
 
 def test_model(model, tokens):
     """Test the model on the tokens.
