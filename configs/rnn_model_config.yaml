@@ -1,5 +1,5 @@
 batch_size: 128
-embedding_size: 20
+embedding_size: 248
 learning_rate: 1
 learning_rate_decay: 0.8
 max_init_param: 0.05
