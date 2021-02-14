@@ -102,12 +102,13 @@ class TrainRnnModelStage(BaseStage):
         self.logger.info("Test preplexity score: {:.1f}".format(test_model(model, test_tokens)))
         self.logger.info("Train preplexity score: {:.1f}".format(test_model(model, train_tokens)))
         self.logger.info("Valid preplexity score: {:.1f}".format(valid_losses[-1]))
-
-        plt.plot(valid_losses[1:], label="validation preplexity")
-        plt.plot(train_losses, label="training preplexity")
+        plt.figure()
+        plt.plot(valid_losses[1:], label="validation perplexity")
+        plt.plot(train_losses, label="training perplexity")
         plt.xlabel("epoch")
         plt.ylabel("preplexity")
         plt.yscale('log')
         plt.legend()
         plt.savefig(join(constants.DATA_PATH, "{}.preplexity.png".format(self.parent.topic)))
+        plt.show()
         return True
