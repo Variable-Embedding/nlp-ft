@@ -109,5 +109,4 @@ class TrainRnnModelStage(BaseStage):
         plt.ylabel("preplexity")
         plt.legend()
         plt.savefig(join(constants.DATA_PATH, "{}.preplexity.png".format(self.parent.topic)))
-        plt.show()
         return True
