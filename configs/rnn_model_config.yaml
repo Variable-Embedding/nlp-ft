@@ -3,7 +3,7 @@ embedding_size: 248
 learning_rate: 1
 learning_rate_decay: 0.8
 max_init_param: 0.05
-max_norm: 20
+max_norm: 2
 number_of_layers: 2
 sequence_length: 30
 dropout_probability: 0.1
