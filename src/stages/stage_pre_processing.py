@@ -67,15 +67,15 @@ class PreProcessingStage(BaseStage):
             article = re.sub('\n\s*', ' new_line_character ', article)
             article = re.sub('<unk>', ' unkown_token ', article)
 
-            tokens = word_tokenize(article)
-            for j in range(len(tokens)):
-                token = tokens[j]
-                token = token.lower()
-                token = token.encode("ascii", "ignore")
-                token = token.decode()
-                token = lemmatizer.lemmatize(token)
-                tokens[j] = token
-            article = " ".join(tokens)
+            #tokens = word_tokenize(article)
+            #for j in range(len(tokens)):
+            #    token = tokens[j]
+            #    token = token.lower()
+            #    token = token.encode("ascii", "ignore")
+            #    token = token.decode()
+            #    token = lemmatizer.lemmatize(token)
+            #    tokens[j] = token
+            #article = " ".join(tokens)
 
             article = re.sub('new_line_character', ' </s> ', article)
             article = re.sub('unkown_token', '<unk>', article)
