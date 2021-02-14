@@ -3,17 +3,10 @@
 from src.stages.base_stage import BaseStage
 from src.util import constants
 
-from nltk.stem import WordNetLemmatizer
-from nltk.tokenize import word_tokenize
 from os.path import join
 
 import logging
-import nltk
 import re
-
-
-nltk.download('punkt')
-nltk.download('wordnet')
 
 class PreProcessingStage(BaseStage):
     """Stage for pre processing text.
@@ -56,7 +49,6 @@ class PreProcessingStage(BaseStage):
         with open(input_file_path, "r") as file:
             text = file.read()
 
-        lemmatizer = WordNetLemmatizer()
         articles = text.split("<article_end>")
         for i in range(len(articles)):
             article = articles[i]

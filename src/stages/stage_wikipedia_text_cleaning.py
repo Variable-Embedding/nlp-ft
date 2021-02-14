@@ -3,6 +3,7 @@
 from src.stages.base_stage import BaseStage
 from src.util import constants
 
+from nltk.stem import WordNetLemmatizer
 from nltk.tokenize import word_tokenize
 from os.path import join
 from wiki_dump_reader import Cleaner
@@ -10,6 +11,9 @@ from wiki_dump_reader import Cleaner
 import logging
 import nltk
 import re
+
+nltk.download('punkt')
+nltk.download('wordnet')
 
 
 class WikipediaTextCleaningStage(BaseStage):
@@ -42,6 +46,7 @@ class WikipediaTextCleaningStage(BaseStage):
         text = re.sub('&nbsp', '', text)
 
         self.logger.info("Cleaning the markup and applying token-wise operations")
+        lemmatizer = WordNetLemmatizer()
         articles = text.split("<article_end>")
         for i in range(len(articles)):
             article = articles[i]
@@ -62,8 +67,10 @@ class WikipediaTextCleaningStage(BaseStage):
             tokens = word_tokenize(article)
             for j in range(len(tokens)):
                 token = tokens[j]
+                token = token.lower()
                 token = token.encode("ascii", "ignore")
                 token = token.decode()
+                token = lemmatizer.lemmatize(token)
                 tokens[j] = token
             article = " ".join(tokens)
             # Bringing back new lines
@@ -72,6 +79,9 @@ class WikipediaTextCleaningStage(BaseStage):
 
             articles[i] = "<article_start> {} <article_end>".format(article)
         text = " ".join(articles)
+
+        self.logger.info("Section title formatting")
+        text = re.sub('==+(.*?)==+', '<section_title_start> \\1 <section_title_end>', text)
 
         with open(output_file_path, "w") as file:
             file.write(text)
