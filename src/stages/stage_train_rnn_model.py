@@ -99,9 +99,9 @@ class TrainRnnModelStage(BaseStage):
         torch.save(model, file_path)
 
         self.logger.info("Performing model evaluation...")
-        self.logger.info("Test preplexity score: {}".format(test_model(model, test_tokens)))
-        self.logger.info("Train preplexity score: {}".format(test_model(model, train_tokens)))
-        self.logger.info("Valid preplexity score: {}".format(valid_losses[-1]))
+        self.logger.info("Test preplexity score: {:.1f}".format(test_model(model, test_tokens)))
+        self.logger.info("Train preplexity score: {:.1f}".format(test_model(model, train_tokens)))
+        self.logger.info("Valid preplexity score: {:.1f}".format(valid_losses[-1]))
 
         plt.plot(valid_losses[1:], label="validation preplexity")
         plt.plot(train_losses, label="training preplexity")

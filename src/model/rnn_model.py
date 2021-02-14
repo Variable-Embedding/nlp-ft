@@ -39,7 +39,7 @@ def detach_states(states):
     """
     return [(h.detach(), c.detach()) for h, c in states]
 
-def batch_data(tokens, model, batch_size=None, sequence_length=None):
+def batch_data(tokens, model, batch_size=None, sequence_length=None, sequence_step_size=None):
     """Helper function to batch the data.
 
     Args:
@@ -54,11 +54,13 @@ def batch_data(tokens, model, batch_size=None, sequence_length=None):
         batch_size = model.batch_size
     if sequence_length is None:
         sequence_length = model.sequence_length
+    if sequence_step_size is None:
+        sequence_step_size = model.sequence_step_size
     data = torch.tensor(tokens, dtype=torch.int64).to(model.device)
     num_batches = data.size(0) // batch_size
     data = data[:num_batches * batch_size]
     data = data.view(batch_size, -1)
-    for sequence_start in range(0, data.size(1) - sequence_length, model.sequence_step_size):
+    for sequence_start in range(0, data.size(1) - sequence_length, sequence_step_size):
         sequence_end = sequence_start + sequence_length
         prefix = data[:,sequence_start:sequence_end].transpose(1, 0)
         target = data[:,sequence_start + 1:sequence_end + 1].transpose(1, 0)
@@ -151,7 +153,7 @@ def test_model(model, tokens):
     losses = []
     states = generate_initial_states(model)
     model.eval()
-    for prefix, target in batch_data(tokens, model):
+    for prefix, target in batch_data(tokens, model, sequence_step_size=model.sequence_length):
         output, states = model(prefix, states)
         losses.append(loss_function(output, target).item() / model.batch_size)
         del prefix
