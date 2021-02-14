@@ -129,12 +129,11 @@ def train_model(model, train_tokens, valid_tokens=None, number_of_epochs=1, logg
                 del prefix
                 del target
 
-            training_losses.append(np.mean(t_losses))
+            training_losses.append(np.exp(np.mean(t_losses)))
             if not valid_tokens is None:
                 validataion_loss = test_model(model, valid_tokens)
                 if not logger is None:
-                    logger.info("Epoch #{}, Validation preplexity: {:.1f}".format(epoch + 1,
-                                                                              validataion_loss))
+                    logger.info("Epoch #{}, Validation preplexity: {:.1f}".format(epoch + 1, validataion_loss))
                 validation_losses.append(validataion_loss)
     return training_losses, validation_losses
 
