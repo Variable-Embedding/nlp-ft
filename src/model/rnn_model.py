@@ -65,6 +65,7 @@ def batch_data(tokens, model, batch_size=None, sequence_length=None, sequence_st
         prefix = data[:,sequence_start:sequence_end].transpose(1, 0)
         target = data[:,sequence_start + 1:sequence_end + 1].transpose(1, 0)
         yield prefix, target
+    del data
 
 def loss_function(output, target):
     """Loss function for the model.
