@@ -107,8 +107,8 @@ def train_model(model, train_tokens, valid_tokens=None, number_of_epochs=1, logg
     counter = 0
     with progressbar.ProgressBar(max_value = number_of_epochs * num_iters) as progress_bar:
         progress_bar.update(0)
-        t_losses = []
         for epoch in range(number_of_epochs):
+            t_losses = []
             states = generate_initial_states(model)
             model.train()
             for prefix, target in batch_data(train_tokens, model):
