@@ -129,7 +129,7 @@ def train_model(model, train_tokens, valid_tokens=None, number_of_epochs=1, logg
                 del prefix
                 del target
 
-            training_losses.apppend(np.mean(t_losses))
+            training_losses.append(np.mean(t_losses))
             if not valid_tokens is None:
                 validataion_loss = test_model(model, valid_tokens)
                 if not logger is None:
