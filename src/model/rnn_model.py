@@ -22,11 +22,10 @@ def generate_initial_states(model, batch_size=None):
     if batch_size is None:
         batch_size = model.batch_size
 
-    return [
-        (torch.zeros(1, batch_size, layer.hidden_size, device=model.device),
-         torch.zeros(1, batch_size, layer.hidden_size, device=model.device))
-        for layer in model.rnns
-    ]
+    return (torch.zeros(model.number_of_layers, batch_size, model.embedding_size,
+                        device=model.device),
+            torch.zeros(model.number_of_layers, batch_size, model.embedding_size,
+                        device=model.device))
 
 def detach_states(states):
     """Helper function for detaching the states.
@@ -37,7 +36,8 @@ def detach_states(states):
     Returns:
         List of detached states.
     """
-    return [(h.detach(), c.detach()) for h, c in states]
+    h, c = states
+    return (h.detach(), c.detach())
 
 def batch_data(tokens, model, batch_size=None, sequence_length=None, sequence_step_size=None):
     """Helper function to batch the data.
@@ -174,7 +174,7 @@ def complete_sequence(model, prefix_tokens, sequence_end_token):
     """
     prefix_tokens = torch.tensor(prefix_tokens).to(model.device)
     state = generate_initial_states(model, 1)
-    
+
     max_iters = 10
     i = 0
     generated = [0]
@@ -188,7 +188,7 @@ def complete_sequence(model, prefix_tokens, sequence_end_token):
             generated.append(torch.argmax(output[-1]).item())
             # Set prefix to new generated
             prefix_tokens = torch.tensor([[generated[-1]]]).to(model.device)
-        
+
     return generated[1:]
 
 
@@ -234,10 +234,9 @@ class Model(nn.Module):
 
         # Set up the architecture.
         self.embedding = nn.Embedding(dictionary_size, embedding_size)
-        rnns = [nn.LSTM(embedding_size, embedding_size) for _ in range(number_of_layers)]
-        self.rnns = nn.ModuleList(rnns)
+        self.lstm = nn.LSTM(embedding_size, embedding_size, num_layers=number_of_layers,
+                            dropout=dropout_probability)
         self.fc = nn.Linear(embedding_size, dictionary_size)
-        self.dropout = nn.Dropout(p=dropout_probability)
 
         # Set initial weights.
         for param in self.parameters():
@@ -245,9 +244,6 @@ class Model(nn.Module):
 
     def forward(self, X, states):
         X = self.embedding(X)
-        X = self.dropout(X)
-        for i, rnn in enumerate(self.rnns):
-            X, states[i] = rnn(X, states[i])
-            X = self.dropout(X)
+        X, states = self.lstm(X, states)
         output = self.fc(X)
         return output, states
