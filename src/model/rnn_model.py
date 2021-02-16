@@ -246,4 +246,5 @@ class Model(nn.Module):
         X = self.embedding(X)
         X, states = self.lstm(X, states)
         output = self.fc(X)
+        output = F.softmax(output, dim=2)
         return output, states
