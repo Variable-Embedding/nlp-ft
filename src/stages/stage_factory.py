@@ -9,6 +9,7 @@ from src.stages.stage_pre_processing import PreProcessingStage
 from src.stages.stage_train_rnn_model import TrainRnnModelStage
 from src.stages.stage_wikipedia_scraping import WikipediaScrapingStage
 from src.stages.stage_wikipedia_text_cleaning import WikipediaTextCleaningStage
+from src.stages.stage_generate_text_rnn_model import GenerateTextRnnModelStage
 from src.util import constants
 
 from os.path import join
@@ -20,6 +21,7 @@ possible_stages = [
     CorpusAnalysisStage,
     CorpusSplitStage,
     DictionaryCreationStage,
+    GenerateTextRnnModelStage,
     PreProcessingStage,
     TrainRnnModelStage,
     WikipediaScrapingStage,
