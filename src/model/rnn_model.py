@@ -113,9 +113,10 @@ def train_model(model, train_tokens, valid_tokens=None, number_of_epochs=1, logg
         for epoch in range(number_of_epochs):
             t_losses = []
             model.train()
+            states = generate_initial_states(model)
             for prefix, target in batch_data(train_tokens, model):
                 model.zero_grad()
-                states = generate_initial_states(model)
+                states = detach_states(states)
                 output, states = model(prefix, states)
                 loss = loss_function(output, target)
                 t_losses.append(loss.item() / model.batch_size)
@@ -180,6 +181,7 @@ def complete_sequence(model, prefix_tokens, sequence_end_token, max_sequence_len
     # Setting up hidden state based on the prefix tokens.
     output, state = model(prefix_tokens.reshape(-1, 1, 1), state)
 
+    # TODO: add beam-search option here?
     # Generating the continuation of the sequence.
     curr_token = prefix_tokens[-1]
     num_tokens_left = max_sequence_length
@@ -231,17 +233,10 @@ class Model(nn.Module):
         if device == "gpu" and torch.cuda.is_available():
             self.device = torch.device("cuda")
         else:
-            self.device =  torch.device("cpu")
+            self.device = torch.device("cpu")
 
         # Set up the architecture.
         self.embedding = nn.Embedding(dictionary_size, embedding_size)
-
-        self.nn_embedding = nn.Sequential(
-            nn.Linear(embedding_size * 3, embedding_size), nn.Tanh(),
-            nn.Linear(embedding_size, embedding_size), nn.Tanh(),
-            nn.Linear(embedding_size, embedding_size)
-        )
-
         self.lstm = nn.LSTM(embedding_size, embedding_size, num_layers=number_of_layers,
                             dropout=dropout_probability)
         self.fc = nn.Linear(embedding_size, dictionary_size)
@@ -252,10 +247,6 @@ class Model(nn.Module):
 
     def forward(self, X, states):
         X = self.embedding(X)
-        for i in range(X.shape[0]):
-            H, C = states
-            X_ = torch.cat((X[i], H[0], C[0]), 1).reshape(1, X.shape[1], -1)
-            X_ = self.nn_embedding(X_)
-            X[i], states = self.lstm(X_, states)
+        X, states = self.lstm(X, states)
         output = self.fc(X)
         return output, states
