@@ -57,10 +57,10 @@ def batch_data(tokens, model, batch_size=None, sequence_length=None, sequence_st
     if sequence_step_size is None:
         sequence_step_size = model.sequence_step_size
     data = torch.tensor(tokens, dtype=torch.int64).to(model.device)
-    num_batches = data.size(0) // batch_size
-    data = data[:num_batches * batch_size]
+    words_per_batch = data.size(0) // batch_size
+    data = data[:words_per_batch * batch_size]
     data = data.view(batch_size, -1)
-    for sequence_start in range(0, data.size(1) - sequence_length, sequence_step_size):
+    for sequence_start in range(0, data.size(1) - sequence_length - 1, sequence_step_size):
         sequence_end = sequence_start + sequence_length
         prefix = data[:,sequence_start:sequence_end].transpose(1, 0)
         target = data[:,sequence_start + 1:sequence_end + 1].transpose(1, 0)
@@ -104,7 +104,7 @@ def train_model(model, train_tokens, valid_tokens=None, number_of_epochs=1, logg
     if not valid_tokens is None:
         validataion_loss = test_model(model, valid_tokens)
         if not logger is None:
-            logger.info("Epoch #0, Validation preplexity: {:.1f}".format(validataion_loss))
+            logger.info("Epoch #0, Validation perplexity: {:.1f}".format(validataion_loss))
         validation_losses.append(validataion_loss)
 
     counter = 0
@@ -112,11 +112,10 @@ def train_model(model, train_tokens, valid_tokens=None, number_of_epochs=1, logg
         progress_bar.update(0)
         for epoch in range(number_of_epochs):
             t_losses = []
-            states = generate_initial_states(model)
             model.train()
             for prefix, target in batch_data(train_tokens, model):
                 model.zero_grad()
-                states = detach_states(states)
+                states = generate_initial_states(model)
                 output, states = model(prefix, states)
                 loss = loss_function(output, target)
                 t_losses.append(loss.item() / model.batch_size)
@@ -136,7 +135,8 @@ def train_model(model, train_tokens, valid_tokens=None, number_of_epochs=1, logg
             if not valid_tokens is None:
                 validataion_loss = test_model(model, valid_tokens)
                 if not logger is None:
-                    logger.info("Epoch #{}, Validation preplexity: {:.1f}".format(epoch + 1, validataion_loss))
+                    logger.info("Epoch #{}, Validation perplexity: {:.1f}".format(epoch + 1,
+                                                                                  validataion_loss))
                 validation_losses.append(validataion_loss)
     return training_losses, validation_losses
 
@@ -157,39 +157,39 @@ def test_model(model, tokens):
     for prefix, target in batch_data(tokens, model, sequence_step_size=model.sequence_length):
         output, states = model(prefix, states)
         losses.append(loss_function(output, target).item() / model.batch_size)
-        del prefix
-        del target
     return np.exp(np.mean(losses))
 
-def complete_sequence(model, prefix_tokens, sequence_end_token):
-    """Using rnn language model, to complete the sequence.
+def complete_sequence(model, prefix_tokens, sequence_end_token, max_sequence_length=1000):
+    """Using lstm language model, to complete the sequence.
 
     Args:
         model: the trained rnn language model.
         prefix_tokens: the start of the sequence.
         sequence_end_token: the token that specifies the end of the sequence.
+        max_sequence_length: the maximum length of the output sequence.
 
     Returns:
         A list of tokens that go after the prefix tokens until sequence end token.
     """
+    model.to(model.device)
+    model.eval()
     prefix_tokens = torch.tensor(prefix_tokens).to(model.device)
     state = generate_initial_states(model, 1)
+    result = []
 
-    max_iters = 10
-    i = 0
-    generated = [0]
-    model.eval()
-    with torch.no_grad():
-        # Loop through and generate tokens
-        while  i < max_iters and generated[-1] != sequence_end_token:
-            i += 1
-            # Get output and append to generated
-            output, state = model(prefix_tokens, state)
-            generated.append(torch.argmax(output[-1]).item())
-            # Set prefix to new generated
-            prefix_tokens = torch.tensor([[generated[-1]]]).to(model.device)
+    # Setting up hidden state based on the prefix tokens.
+    output, state = model(prefix_tokens.reshape(-1, 1, 1), state)
 
-    return generated[1:]
+    # Generating the continuation of the sequence.
+    curr_token = prefix_tokens[-1]
+    num_tokens_left = max_sequence_length
+    while curr_token != sequence_end_token and num_tokens_left > 0:
+        curr_token = torch.argmax(output, dim=2)
+        result.append(curr_token.item())
+        output, state = model(curr_token.reshape(1, 1, 1), state)
+        num_tokens_left -= 1
+
+    return result
 
 
 class Model(nn.Module):
@@ -210,6 +210,7 @@ class Model(nn.Module):
             max_init_param: the maximum weight after initialization.
             device: the device on which the model will be. (either "cpu" or "gpu")
             learning_rate_decay: learning rate decay
+            sequence_step_size: the step size for batching (the smaller it is, the more overlap).
         """
         super().__init__()
         self.dictionary_size = dictionary_size
@@ -234,6 +235,13 @@ class Model(nn.Module):
 
         # Set up the architecture.
         self.embedding = nn.Embedding(dictionary_size, embedding_size)
+
+        self.nn_embedding = nn.Sequential(
+            nn.Linear(embedding_size * 3, embedding_size * 2), nn.ReLU(),
+            nn.Linear(embedding_size * 2, embedding_size), nn.ReLU(),
+            nn.Linear(embedding_size, embedding_size)
+        )
+
         self.lstm = nn.LSTM(embedding_size, embedding_size, num_layers=number_of_layers,
                             dropout=dropout_probability)
         self.fc = nn.Linear(embedding_size, dictionary_size)
@@ -244,6 +252,10 @@ class Model(nn.Module):
 
     def forward(self, X, states):
         X = self.embedding(X)
-        X, states = self.lstm(X, states)
+        for i in range(X.shape[0]):
+            H, C = states
+            X_ = torch.cat((X[i], H[0], C[0]), 1).reshape(1, X.shape[1], -1)
+            X_ = self.nn_embedding(X_)
+            X[i], states = self.lstm(X_, states)
         output = self.fc(X)
         return output, states
