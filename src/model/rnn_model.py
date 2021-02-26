@@ -237,8 +237,8 @@ class Model(nn.Module):
         self.embedding = nn.Embedding(dictionary_size, embedding_size)
 
         self.nn_embedding = nn.Sequential(
-            nn.Linear(embedding_size * 3, embedding_size * 2), nn.ReLU(),
-            nn.Linear(embedding_size * 2, embedding_size), nn.ReLU(),
+            nn.Linear(embedding_size * 3, embedding_size), nn.Tanh(),
+            nn.Linear(embedding_size, embedding_size), nn.Tanh(),
             nn.Linear(embedding_size, embedding_size)
         )
 
