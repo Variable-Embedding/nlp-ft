@@ -56,10 +56,12 @@ def batch_data(tokens, model, batch_size=None, sequence_length=None, sequence_st
         sequence_length = model.sequence_length
     if sequence_step_size is None:
         sequence_step_size = model.sequence_step_size
+
     data = torch.tensor(tokens, dtype=torch.int64).to(model.device)
     words_per_batch = data.size(0) // batch_size
     data = data[:words_per_batch * batch_size]
     data = data.view(batch_size, -1)
+
     for sequence_start in range(0, data.size(1) - sequence_length - 1, sequence_step_size):
         sequence_end = sequence_start + sequence_length
         prefix = data[:,sequence_start:sequence_end].transpose(1, 0)
@@ -77,11 +79,7 @@ def loss_function(output, target):
     Returns:
         Loss.
     """
-    batch_size = target.size(1)
-    return F.cross_entropy(output.reshape(-1, output.size(2)), target.reshape(-1)) * batch_size
-    #probabilities = F.softmax(output, dim=2).reshape(-1, output.size(2))
-    #target_probabilities = probabilities[range(target.numel()), target.reshape(-1)]
-    #return torch.mean(-torch.log(target_probabilities) * batch_size)
+    return F.cross_entropy(output.reshape(-1, output.size(2)), target.reshape(-1)) * target.size(1)
 
 def train_model(model, train_tokens, valid_tokens=None, number_of_epochs=1, logger=None):
     """Train the model in the train data.
@@ -109,12 +107,13 @@ def train_model(model, train_tokens, valid_tokens=None, number_of_epochs=1, logg
 
     counter = 0
     with progressbar.ProgressBar(max_value = number_of_epochs * num_iters) as progress_bar:
-        progress_bar.update(0)
         for epoch in range(number_of_epochs):
+            progress_bar.update(counter)
             t_losses = []
             model.train()
             states = generate_initial_states(model)
             for prefix, target in batch_data(train_tokens, model):
+                counter += 1
                 model.zero_grad()
                 states = detach_states(states)
                 output, states = model(prefix, states)
@@ -126,11 +125,6 @@ def train_model(model, train_tokens, valid_tokens=None, number_of_epochs=1, logg
                     for param in model.parameters():
                         lr = model.learning_rate * (model.learning_rate_decay ** epoch)
                         param -= lr * param.grad
-
-                counter += 1
-                progress_bar.update(counter)
-                del prefix
-                del target
 
             training_losses.append(np.exp(np.mean(t_losses)))
             if not valid_tokens is None:
@@ -194,15 +188,38 @@ def complete_sequence(model, prefix_tokens, sequence_end_token, max_sequence_len
     return result
 
 
+class LSTM(nn.Module):
+    def __init__(self, embedding_size, hidden_size, number_of_layers, dropout_probability,
+                 lstm_configuration):
+        """Initializetion for LSTM module.
+
+        Args:
+            embedding_size: number of features in the embedding space.
+            hidden_size: the size of hidden state.
+            number_of_layers: number of LSTM layers (for stacked-LSTM).
+            droupout_probability: the probability for dropping individual node in the network.
+            lstm_configuration: the configuration of the lstm.
+        """
+        super().__init__()
+        self.lstm = nn.LSTM(embedding_size, embedding_size, num_layers=number_of_layers,
+                            dropout=dropout_probability)
+
+    def forward(self, X, states=None):
+        X, states = self.lstm(X, states)
+        return X, states
+
+
 class Model(nn.Module):
-    def __init__(self, dictionary_size, embedding_size=10, number_of_layers=1, max_norm=0.0001,
-                 dropout_probability=0.1, batch_size=64, sequence_length=5, learning_rate=0.0001,
-                 max_init_param=0.01, device="cpu", sequence_step_size=None, learning_rate_decay=1):
+    def __init__(self, dictionary_size, embedding_size=10, hidden_size=None, number_of_layers=1,
+                 max_norm=0.0001, dropout_probability=0.1, batch_size=64, sequence_length=5,
+                 learning_rate=0.0001, max_init_param=0.01, device="cpu", sequence_step_size=None,
+                 learning_rate_decay=1, lstm_configuration="default"):
         """Initialization for the model.
 
         Args:
             dictionary_size: number of words in the dictionary.
             embedding_size: number of features in the embedding space.
+            hidden_size: the size of hidden state.
             number_of_layers: number of LSTM layers.
             max_norm: the maximum norm for the backward propagation.
             droupout_probability: the probability for dropping individual node in the network.
@@ -213,10 +230,12 @@ class Model(nn.Module):
             device: the device on which the model will be. (either "cpu" or "gpu")
             learning_rate_decay: learning rate decay
             sequence_step_size: the step size for batching (the smaller it is, the more overlap).
+            lstm_configuration: the configuration of the lstm.
         """
         super().__init__()
         self.dictionary_size = dictionary_size
         self.embedding_size = embedding_size
+        self.hidden_size = embedding_size if hidden_size is None else hidden_size
         self.number_of_layers = number_of_layers
         self.max_norm = max_norm
         self.learning_rate = learning_rate
@@ -237,15 +256,15 @@ class Model(nn.Module):
 
         # Set up the architecture.
         self.embedding = nn.Embedding(dictionary_size, embedding_size)
-        self.lstm = nn.LSTM(embedding_size, embedding_size, num_layers=number_of_layers,
-                            dropout=dropout_probability)
-        self.fc = nn.Linear(embedding_size, dictionary_size)
+        self.lstm = LSTM(self.embedding_size, self.hidden_size, number_of_layers,
+                         dropout_probability, lstm_configuration)
+        self.fc = nn.Linear(self.hidden_size, dictionary_size)
 
         # Set initial weights.
         for param in self.parameters():
             nn.init.uniform_(param, -max_init_param, max_init_param)
 
-    def forward(self, X, states):
+    def forward(self, X, states=None):
         X = self.embedding(X)
         X, states = self.lstm(X, states)
         output = self.fc(X)
