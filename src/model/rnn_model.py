@@ -113,6 +113,7 @@ def train_model(model, train_tokens, valid_tokens=None, number_of_epochs=1, logg
             model.train()
             states = generate_initial_states(model)
             for prefix, target in batch_data(train_tokens, model):
+                progress_bar.update(counter)
                 counter += 1
                 model.zero_grad()
                 states = detach_states(states)
@@ -201,7 +202,7 @@ class LSTM(nn.Module):
             lstm_configuration: the configuration of the lstm.
         """
         super().__init__()
-        self.lstm = nn.LSTM(embedding_size, embedding_size, num_layers=number_of_layers,
+        self.lstm = nn.LSTM(embedding_size, hidden_size, num_layers=number_of_layers,
                             dropout=dropout_probability)
 
     def forward(self, X, states=None):
