@@ -89,26 +89,30 @@ class TrainRnnModelStage(BaseStage):
             dictionary = json.loads(file.read())
         self.logger.info("Dictionary contains {} tokens.".format(len(dictionary)))
 
-        model = Model(dictionary_size=len(dictionary), **model_config)
-        self.logger.info("Starting model training...")
-        train_losses, valid_losses = train_model(model=model, train_tokens=train_tokens, valid_tokens=valid_tokens,
-                                                 logger=self.logger, **training_config)
-        self.logger.info("Finished model training.")
-        self.logger.info("Saving the model...")
-        file_path = join(constants.DATA_PATH, "{}.model.pkl".format(self.parent.topic))
-        torch.save(model, file_path)
+        for lstm_config in ["default", "var-emb", "res-var-emb"]:
+            model_config["lstm_configuration"] = lstm_config
+            model = Model(dictionary_size=len(dictionary), **model_config)
+            self.logger.info("Starting model training with lstm configuration {} ...".format(
+                lstm_config))
+            train_losses, valid_losses = train_model(model=model, train_tokens=train_tokens, valid_tokens=valid_tokens,
+                                                     logger=self.logger, **training_config)
+            self.logger.info("Finished model training.")
+            self.logger.info("Saving the model...")
+            file_path = join(constants.DATA_PATH, "{}.{}.model.pkl".format(self.parent.topic,
+                                                                           lstm_config))
+            torch.save(model, file_path)
 
-        self.logger.info("Performing model evaluation...")
-        self.logger.info("Test perplexity score: {:.1f}".format(test_model(model, test_tokens)))
-        self.logger.info("Train perplexity score: {:.1f}".format(test_model(model, train_tokens)))
-        self.logger.info("Valid perplexity score: {:.1f}".format(valid_losses[-1]))
-        plt.figure()
-        plt.plot(valid_losses[1:], label="validation perplexity")
-        plt.plot(train_losses, label="training perplexity")
-        plt.xlabel("epoch")
-        plt.ylabel("perplexit")
-        plt.yscale('log')
-        plt.legend()
-        plt.savefig(join(constants.DATA_PATH, "{}.preplexity.png".format(self.parent.topic)))
-        plt.show()
+            self.logger.info("Performing model evaluation...")
+            self.logger.info("Test perplexity score: {:.1f}".format(test_model(model, test_tokens)))
+            self.logger.info("Train perplexity score: {:.1f}".format(test_model(model, train_tokens)))
+            self.logger.info("Valid perplexity score: {:.1f}".format(valid_losses[-1]))
+            plt.figure()
+            plt.plot(valid_losses[1:], label="validation perplexity")
+            plt.plot(train_losses, label="training perplexity")
+            plt.xlabel("epoch")
+            plt.ylabel("perplexit")
+            plt.yscale("log")
+            plt.legend()
+            plt.savefig(join(constants.DATA_PATH, "{}.{}.preplexity.png".format(self.parent.topic,
+                                                                                lstm_config)))
         return True

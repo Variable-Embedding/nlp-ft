@@ -199,14 +199,48 @@ class LSTM(nn.Module):
             hidden_size: the size of hidden state.
             number_of_layers: number of LSTM layers (for stacked-LSTM).
             droupout_probability: the probability for dropping individual node in the network.
-            lstm_configuration: the configuration of the lstm.
+            lstm_configuration: the configuration of the lstm. Possible configurations:
+            Name            Description
+            default         The regular stacked-lstm architecture
+            var-emb         The input and states are passed through forward network before lstm
+                            layer
+            res-var-emb     The input and states are passed through forward and appended with input
         """
         super().__init__()
-        self.lstm = nn.LSTM(embedding_size, hidden_size, num_layers=number_of_layers,
-                            dropout=dropout_probability)
+        configurations = {
+            "default": 0,
+            "var-emb": 1,
+            "res-var-emb": 2,
+        }
+        self.configuration = configurations[lstm_configuration]
+
+        if self.configuration != 0:
+            self.embedding = nn.Sequential(
+                nn.Linear(embedding_size + 2 * number_of_layers * hidden_size, embedding_size)
+            )
+
+        if self.configuration == 2:
+            self.lstm = nn.LSTM(2*embedding_size, hidden_size, num_layers=number_of_layers,
+                                dropout=dropout_probability)
+        else:
+            self.lstm = nn.LSTM(embedding_size, hidden_size, num_layers=number_of_layers,
+                                dropout=dropout_probability)
 
     def forward(self, X, states=None):
-        X, states = self.lstm(X, states)
+        if self.configuration == 0:
+            X, states = self.lstm(X, states)
+        else:
+            batch_size = X.shape[1]
+            for i in range(X.shape[0]):
+                H, C = states
+                X_ = torch.cat((X[i].view(1, batch_size, -1),
+                                H.view(1, batch_size, -1),
+                                C.view(1, batch_size, -1)), 2)
+                X_ = X_.view(1, batch_size, -1)
+                X_ = self.embedding(X_)
+                if self.configuration == 2:
+                    X_ = torch.cat((X[i].view(1, batch_size, -1), X_), 2)
+                X[i], states = self.lstm(X_, states)
         return X, states
 
 
