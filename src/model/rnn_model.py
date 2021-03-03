@@ -248,7 +248,7 @@ class LSTM(nn.Module):
 
 class Model(nn.Module):
     def __init__(self, dictionary_size, embedding_size=10, hidden_size=None, number_of_layers=1,
-                 max_norm=0.0001, dropout_probability=0.1, batch_size=64, sequence_length=5,
+                 dropout_probability=0.1, batch_size=64, sequence_length=5,
                  learning_rate=0.0001, max_init_param=0.01, device="cpu", sequence_step_size=None,
                  learning_rate_decay=1, lstm_configuration="default"):
         """Initialization for the model.
@@ -258,7 +258,6 @@ class Model(nn.Module):
             embedding_size: number of features in the embedding space.
             hidden_size: the size of hidden state.
             number_of_layers: number of LSTM layers.
-            max_norm: the maximum norm for the backward propagation.
             droupout_probability: the probability for dropping individual node in the network.
             batch_size: the batch size for the model.
             sequence_length: the token sequence length.
@@ -274,7 +273,6 @@ class Model(nn.Module):
         self.embedding_size = embedding_size
         self.hidden_size = embedding_size if hidden_size is None else hidden_size
         self.number_of_layers = number_of_layers
-        self.max_norm = max_norm
         self.learning_rate = learning_rate
         self.batch_size = batch_size
         self.sequence_length = sequence_length
