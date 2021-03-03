@@ -109,6 +109,8 @@ def train_model(model, train_tokens, valid_tokens=None, number_of_epochs=1, logg
     with progressbar.ProgressBar(max_value = number_of_epochs * num_iters) as progress_bar:
         for epoch in range(number_of_epochs):
             progress_bar.update(counter)
+            lr = model.learning_rate * (model.learning_rate_decay ** epoch)
+            optimizer = torch.optim.Adam(model.parameters(), lr=lr)
             t_losses = []
             model.train()
             states = generate_initial_states(model)
@@ -121,11 +123,7 @@ def train_model(model, train_tokens, valid_tokens=None, number_of_epochs=1, logg
                 loss = loss_function(output, target)
                 t_losses.append(loss.item() / model.batch_size)
                 loss.backward()
-                with torch.no_grad():
-                    norm = nn.utils.clip_grad_norm_(model.parameters(), model.max_norm)
-                    for param in model.parameters():
-                        lr = model.learning_rate * (model.learning_rate_decay ** epoch)
-                        param -= lr * param.grad
+                optimizer.step()
 
             training_losses.append(np.exp(np.mean(t_losses)))
             if not valid_tokens is None:
