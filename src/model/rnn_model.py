@@ -216,7 +216,11 @@ class LSTM(nn.Module):
 
         if self.configuration != 0:
             self.embedding = nn.Sequential(
-                nn.Linear(embedding_size + 2 * number_of_layers * hidden_size, embedding_size)
+                nn.Linear(embedding_size + 2 * number_of_layers * hidden_size, 2 * embedding_size),
+                nn.Tanh(),
+                nn.Linear(2 * embedding_size, embedding_size),
+                nn.Tanh(),
+                nn.Linear(embedding_size, embedding_size)
             )
 
         if self.configuration == 2:

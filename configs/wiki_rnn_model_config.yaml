@@ -1,13 +1,12 @@
 batch_size: 100
-embedding_size: 200
-hidden_size: 200
+embedding_size: 100
+hidden_size: 100
 learning_rate: 1
 learning_rate_decay: 0.8
 max_init_param: 0.05
 max_norm: 4
 number_of_layers: 2
 sequence_length: 30
-sequence_step_size: 10
 dropout_probability: 0.5
 lstm_configuration: default
 device: gpu
