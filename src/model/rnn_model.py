@@ -110,7 +110,7 @@ def train_model(model, train_tokens, valid_tokens=None, number_of_epochs=1, logg
         for epoch in range(number_of_epochs):
             progress_bar.update(counter)
             lr = model.learning_rate * (model.learning_rate_decay ** epoch)
-            optimizer = torch.optim.Adam(model.parameters(), lr=lr)
+            optimizer = torch.optim.SGD(model.parameters(), lr=lr)
             t_losses = []
             model.train()
             states = generate_initial_states(model)
