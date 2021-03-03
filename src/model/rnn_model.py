@@ -123,7 +123,11 @@ def train_model(model, train_tokens, valid_tokens=None, number_of_epochs=1, logg
                 loss = loss_function(output, target)
                 t_losses.append(loss.item() / model.batch_size)
                 loss.backward()
-                optimizer.step()
+                with torch.no_grad():
+                    norm = nn.utils.clip_grad_norm_(model.parameters(), model.max_norm)
+                    for param in model.parameters():
+                        lr = model.learning_rate * (model.learning_rate_decay ** epoch)
+                        param -= lr * param.grad
 
             training_losses.append(np.exp(np.mean(t_losses)))
             if not valid_tokens is None:
@@ -248,7 +252,7 @@ class LSTM(nn.Module):
 
 class Model(nn.Module):
     def __init__(self, dictionary_size, embedding_size=10, hidden_size=None, number_of_layers=1,
-                 dropout_probability=0.1, batch_size=64, sequence_length=5,
+                 dropout_probability=0.1, batch_size=64, sequence_length=5, max_norm=2,
                  learning_rate=0.0001, max_init_param=0.01, device="cpu", sequence_step_size=None,
                  learning_rate_decay=1, lstm_configuration="default"):
         """Initialization for the model.
@@ -261,6 +265,7 @@ class Model(nn.Module):
             droupout_probability: the probability for dropping individual node in the network.
             batch_size: the batch size for the model.
             sequence_length: the token sequence length.
+            max_norm: the maximum norm for back propagation.
             learning_rate: the learning rate.
             max_init_param: the maximum weight after initialization.
             device: the device on which the model will be. (either "cpu" or "gpu")
@@ -276,6 +281,7 @@ class Model(nn.Module):
         self.learning_rate = learning_rate
         self.batch_size = batch_size
         self.sequence_length = sequence_length
+        self.max_norm = max_norm
         self.max_init_param = max_init_param
         self.learning_rate_decay = learning_rate_decay
 
