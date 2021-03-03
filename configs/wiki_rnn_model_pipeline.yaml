@@ -29,3 +29,17 @@ stages:
   train_file: tokens.train.pkl
   valid_file: tokens.valid.pkl
   test_file: tokens.test.pkl
+
+- name: train_rnn_model
+  training_config_file: rnn_training_config.yaml
+  model_config_file: wiki_rnn_model_var_emb_config.yaml
+  train_file: tokens.train.pkl
+  valid_file: tokens.valid.pkl
+  test_file: tokens.test.pkl
+
+- name: train_rnn_model
+  training_config_file: rnn_training_config.yaml
+  model_config_file: wiki_rnn_model_res_var_emb_config.yaml
+  train_file: tokens.train.pkl
+  valid_file: tokens.valid.pkl
+  test_file: tokens.test.pkl

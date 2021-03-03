@@ -4,10 +4,10 @@ hidden_size: 200
 learning_rate: 1
 learning_rate_decay: 0.8
 max_init_param: 0.05
-max_norm: 4
+max_norm: 40
 number_of_layers: 2
 sequence_length: 30
 sequence_step_size: 10
 dropout_probability: 0.5
-lstm_config: default
+lstm_config: res-var-emb
 device: gpu
