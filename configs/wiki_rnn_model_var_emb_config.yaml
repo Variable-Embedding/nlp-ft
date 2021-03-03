@@ -9,5 +9,5 @@ number_of_layers: 2
 sequence_length: 30
 sequence_step_size: 10
 dropout_probability: 0.5
-lstm_config: var-emb
+lstm_configuration: var-emb
 device: gpu
