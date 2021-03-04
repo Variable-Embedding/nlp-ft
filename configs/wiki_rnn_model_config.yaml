@@ -3,10 +3,10 @@ embedding_size: 100
 hidden_size: 100
 learning_rate: 1
 learning_rate_decay: 0.9
-max_norm: 4
-max_init_param: 0.05
+max_norm: 5
+max_init_param: 0.1
 number_of_layers: 2
 sequence_length: 30
-dropout_probability: 0.5
+dropout_probability: 0.6
 lstm_configuration: default
 device: gpu

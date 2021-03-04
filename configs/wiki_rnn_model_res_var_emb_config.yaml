@@ -7,6 +7,6 @@ max_norm: 8
 max_init_param: 0.05
 number_of_layers: 2
 sequence_length: 30
-dropout_probability: 0.5
+dropout_probability: 0.6
 lstm_configuration: res-var-emb
 device: gpu
