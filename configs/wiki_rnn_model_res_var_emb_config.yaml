@@ -2,8 +2,8 @@ batch_size: 80
 embedding_size: 10
 hidden_size: 10
 learning_rate: 1
-learning_rate_decay: 0.85
-max_norm: 4
+learning_rate_decay: 0.9
+max_norm: 2
 max_init_param: 0.05
 number_of_layers: 1
 sequence_length: 30
