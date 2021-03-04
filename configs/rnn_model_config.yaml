@@ -8,4 +8,5 @@ number_of_layers: 2
 sequence_length: 30
 sequence_step_size: 10
 dropout_probability: 0.1
+lstm_configuration: default
 device: gpu
