@@ -99,6 +99,10 @@ def train_model(model, train_tokens, valid_tokens=None, number_of_epochs=1, logg
     training_losses = []
     validation_losses = []
 
+    if not logger is None:
+        num_parameters = sum([np.prod(p.size()) for p in model.parameters()])
+        logger.info("Number of model parameters: {}".format(num_parameters))
+
     if not valid_tokens is None:
         validataion_loss = test_model(model, valid_tokens)
         if not logger is None:
@@ -220,9 +224,13 @@ class LSTM(nn.Module):
             self.embedding = nn.Sequential(
                 nn.Linear(embedding_size + 2 * number_of_layers * hidden_size, 2 * embedding_size),
                 nn.Tanh(),
-                nn.Linear(2 * embedding_size, embedding_size),
+                nn.Linear(2 * embedding_size, 2 * embedding_size),
                 nn.Tanh(),
-                nn.Linear(embedding_size, embedding_size)
+                nn.Linear(2 * embedding_size, 2 * embedding_size),
+                nn.Tanh(),
+                nn.Linear(2 * embedding_size, 2 * embedding_size),
+                nn.Tanh(),
+                nn.Linear(2 * embedding_size, embedding_size)
             )
 
         if self.configuration == 2:

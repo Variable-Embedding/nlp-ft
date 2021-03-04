@@ -1,6 +1,6 @@
 batch_size: 80
-embedding_size: 50
-hidden_size: 50
+embedding_size: 10
+hidden_size: 10
 learning_rate: 0.5
 learning_rate_decay: 0.8
 max_norm: 3
