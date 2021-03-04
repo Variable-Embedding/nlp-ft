@@ -1,4 +1,4 @@
-batch_size: 50
+batch_size: 100
 embedding_size: 2
 hidden_size: 2
 learning_rate: 1
