@@ -1,13 +1,12 @@
-batch_size: 80
+batch_size: 100
 embedding_size: 2
 hidden_size: 2
 learning_rate: 1
 learning_rate_decay: 0.9
-max_norm: 2
+max_norm: 1
 max_init_param: 0.05
 number_of_layers: 1
 sequence_length: 30
-sequence_step_size: 5
 dropout_probability: 0.6
 lstm_configuration: res-var-emb
 device: gpu
