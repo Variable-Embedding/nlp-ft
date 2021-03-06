@@ -234,13 +234,9 @@ class LSTM(nn.Module):
                 nn.Tanh(), nn.Dropout(dropout_probability),
                 nn.Linear(3 * embedding_size, 3 * embedding_size),
                 nn.Tanh(), nn.Dropout(dropout_probability),
-                nn.Linear(3 * embedding_size, 3 * embedding_size),
-                nn.Tanh(), nn.Dropout(dropout_probability),
-                nn.Linear(3 * embedding_size, 3 * embedding_size),
-                nn.Tanh(), nn.Dropout(dropout_probability),
                 nn.Linear(3 * embedding_size, 2 * embedding_size),
                 nn.Tanh(), nn.Dropout(dropout_probability),
-                nn.Linear(2 * embedding_size, embedding_size)
+                nn.Linear(2 * embedding_size, embedding_size), nn.Tanh()
             )
 
         if self.configuration == 2:

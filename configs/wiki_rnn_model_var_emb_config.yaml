@@ -2,7 +2,7 @@ batch_size: 50
 embedding_size: 50
 learning_rate: 1
 learning_rate_decay: 0.85
-max_norm: 10
+max_norm: 7.5
 max_init_param: 0.1
 number_of_layers: 2
 sequence_length: 30
