@@ -227,14 +227,12 @@ class LSTM(nn.Module):
         self.configuration = configurations[lstm_configuration]
 
         if self.configuration != 0:
-            self.embedding = nn.Sequential(
-                nn.Linear((1 + 2 * number_of_layers) * embedding_size, 3 * embedding_size),
+            self.ff = nn.Sequential(
+                nn.Linear((2 * number_of_layers) * embedding_size, 2 * embedding_size),
                 nn.Tanh(), nn.Dropout(dropout_probability),
-                nn.Linear(3 * embedding_size, 3 * embedding_size),
+                nn.Linear(2 * embedding_size, 2 * embedding_size),
                 nn.Tanh(), nn.Dropout(dropout_probability),
-                nn.Linear(3 * embedding_size, 3 * embedding_size),
-                nn.Tanh(), nn.Dropout(dropout_probability),
-                nn.Linear(3 * embedding_size, 2 * embedding_size),
+                nn.Linear(2 * embedding_size, 2 * embedding_size),
                 nn.Tanh(), nn.Dropout(dropout_probability),
                 nn.Linear(2 * embedding_size, embedding_size), nn.Tanh()
             )
@@ -253,11 +251,10 @@ class LSTM(nn.Module):
             batch_size = X.shape[1]
             for i in range(X.shape[0]):
                 H, C = states
-                X_ = torch.cat((X[i].view(1, batch_size, -1),
-                                H.view(1, batch_size, -1),
-                                C.view(1, batch_size, -1)), 2)
-                X_ = X_.view(1, batch_size, -1)
-                X_ = self.embedding(X_)
+                attention = torch.cat((H.view(1, batch_size, -1),
+                                      C.view(1, batch_size, -1)), 2)
+                attention = self.ff(attention.view(1, batch_size, -1))
+                X_ = attention * X[i].view(1, batch_size, -1)
                 if self.configuration == 2:
                     X_ = torch.cat((X[i].view(1, batch_size, -1), X_), 2)
                 X[i], states = self.lstm(X_, states)
