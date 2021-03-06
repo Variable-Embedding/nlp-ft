@@ -1,10 +1,10 @@
-batch_size: 100
-embedding_size: 5
+batch_size: 50
+embedding_size: 50
 learning_rate: 1
 learning_rate_decay: 0.85
-max_norm: 1
+max_norm: 10
 max_init_param: 0.1
-number_of_layers: 1
+number_of_layers: 2
 sequence_length: 30
 dropout_probability: 0.4
 lstm_configuration: default

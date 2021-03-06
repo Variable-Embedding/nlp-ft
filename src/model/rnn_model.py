@@ -228,13 +228,17 @@ class LSTM(nn.Module):
 
         if self.configuration != 0:
             self.embedding = nn.Sequential(
-                nn.Linear((1 + 2 * number_of_layers) * embedding_size, 2 * embedding_size),
+                nn.Linear((1 + 2 * number_of_layers) * embedding_size, 3 * embedding_size),
                 nn.Tanh(), nn.Dropout(dropout_probability),
-                nn.Linear(2 * embedding_size, 2 * embedding_size),
+                nn.Linear(3 * embedding_size, 3 * embedding_size),
                 nn.Tanh(), nn.Dropout(dropout_probability),
-                nn.Linear(2 * embedding_size, 2 * embedding_size),
+                nn.Linear(3 * embedding_size, 3 * embedding_size),
                 nn.Tanh(), nn.Dropout(dropout_probability),
-                nn.Linear(2 * embedding_size, 2 * embedding_size),
+                nn.Linear(3 * embedding_size, 3 * embedding_size),
+                nn.Tanh(), nn.Dropout(dropout_probability),
+                nn.Linear(3 * embedding_size, 3 * embedding_size),
+                nn.Tanh(), nn.Dropout(dropout_probability),
+                nn.Linear(3 * embedding_size, 2 * embedding_size),
                 nn.Tanh(), nn.Dropout(dropout_probability),
                 nn.Linear(2 * embedding_size, embedding_size)
             )
