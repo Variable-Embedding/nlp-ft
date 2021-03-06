@@ -39,13 +39,16 @@ def detach_states(states):
     h, c = states
     return (h.detach(), c.detach())
 
-def batch_data(tokens, model, batch_size=None, sequence_length=None, sequence_step_size=None):
+def batch_data(tokens, model, batch_size=None, sequence_length=None, sequence_step_size=None,
+               shuffle=False):
     """Helper function to batch the data.
 
     Args:
         data: the data to batch.
         model: the model to batch for.
         batch_size: the batch size, if None will use model.batch_size.
+        sequence_step_size: the sequence step size.
+        shuffle: Whether to shuffle the order of sequences.
 
     Returns:
         Iterator for batched data.
@@ -62,7 +65,11 @@ def batch_data(tokens, model, batch_size=None, sequence_length=None, sequence_st
     data = data[:words_per_batch * batch_size]
     data = data.view(batch_size, -1)
 
-    for sequence_start in range(0, data.size(1) - sequence_length - 1, sequence_step_size):
+    sequence_start_list = list(range(0, data.size(1) - sequence_length - 1, sequence_step_size))
+    if shuffle:
+        np.random.shuffle(sequence_start_list)
+
+    for sequence_start in sequence_start_list:
         sequence_end = sequence_start + sequence_length
         prefix = data[:,sequence_start:sequence_end].transpose(1, 0)
         target = data[:,sequence_start + 1:sequence_end + 1].transpose(1, 0)
@@ -118,7 +125,7 @@ def train_model(model, train_tokens, valid_tokens=None, number_of_epochs=1, logg
             t_losses = []
             model.train()
             states = generate_initial_states(model)
-            for prefix, target in batch_data(train_tokens, model):
+            for prefix, target in batch_data(train_tokens, model, shuffle=True):
                 progress_bar.update(counter)
                 counter += 1
                 model.zero_grad()
@@ -223,13 +230,13 @@ class LSTM(nn.Module):
         if self.configuration != 0:
             self.embedding = nn.Sequential(
                 nn.Linear(embedding_size + 2 * number_of_layers * hidden_size, 2 * embedding_size),
-                nn.Tanh(),
+                nn.Tanh(), nn.Dropout(dropout_probability)
                 nn.Linear(2 * embedding_size, 2 * embedding_size),
-                nn.Tanh(),
+                nn.Tanh(), nn.Dropout(dropout_probability)
                 nn.Linear(2 * embedding_size, 2 * embedding_size),
-                nn.Tanh(),
+                nn.Tanh(), nn.Dropout(dropout_probability)
                 nn.Linear(2 * embedding_size, 2 * embedding_size),
-                nn.Tanh(),
+                nn.Tanh(), nn.Dropout(dropout_probability)
                 nn.Linear(2 * embedding_size, embedding_size)
             )
 
