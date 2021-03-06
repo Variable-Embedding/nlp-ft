@@ -41,6 +41,7 @@ class RnnTrainingComparisonStage(BaseStage):
         Returns:
             True if the stage execution succeded, False otherwise.
         """
+        plt.figure()
         for lstm_config in ["default", "var-emb", "res-var-emb"]:
             file_path = join(constants.DATA_PATH, "{}.{}.losses.csv".format(self.parent.topic,
                                                                             lstm_config))
@@ -48,7 +49,6 @@ class RnnTrainingComparisonStage(BaseStage):
             train_losses = train_valid_losses[:][0]
             valid_losses = train_valid_losses[:][0]
 
-            plt.figure()
             plt.plot(valid_losses, label="{} validation perplexity".format(lstm_config))
             plt.plot(train_losses, label="{} training perplexity".format(lstm_config))
 
