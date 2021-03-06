@@ -254,7 +254,7 @@ class LSTM(nn.Module):
                 attention = torch.cat((H.view(1, batch_size, -1),
                                       C.view(1, batch_size, -1)), 2)
                 attention = self.ff(attention.view(1, batch_size, -1))
-                X_ = torch.mul(attention, X[i].view(1, batch_size, -1))
+                X_ = torch.mul(attention.clone(), X[i].view(1, batch_size, -1))
                 if self.configuration == 2:
                     X_ = torch.cat((X[i].view(1, batch_size, -1), X_), 2)
                 X[i], states = self.lstm(X_, states)
