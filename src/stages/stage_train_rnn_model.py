@@ -10,9 +10,10 @@ from os.path import join
 
 import json
 import logging
+import matplotlib.pyplot as plt
+import numpy as np
 import re
 import termplotlib as tpl
-import matplotlib.pyplot as plt
 import torch
 import yaml
 
@@ -93,13 +94,20 @@ class TrainRnnModelStage(BaseStage):
         model = Model(dictionary_size=len(dictionary), **model_config)
         self.logger.info("Starting model training with lstm configuration {} ...".format(
             lstm_config))
-        train_losses, valid_losses = train_model(model=model, train_tokens=train_tokens, valid_tokens=valid_tokens,
-                                                 logger=self.logger, **training_config)
+        train_losses, valid_losses = train_model(model=model, train_tokens=train_tokens,
+                                                 valid_tokens=valid_tokens, logger=self.logger,
+                                                 **training_config)
         self.logger.info("Finished model training.")
         self.logger.info("Saving the model...")
         file_path = join(constants.DATA_PATH, "{}.{}.model.pkl".format(self.parent.topic,
                                                                        lstm_config))
         torch.save(model, file_path)
+
+        self.logger.info("Saving training and validation losses to csv...")
+        train_valid_losses = np.column_stack(train_losses, valid_losses)
+        file_path = join(constants.DATA_PATH, "{}.{}.losses.csv".format(self.parent.topic,
+                                                                        lstm_config))
+        np.savetxt(file_path, train_valid_losses, delimiter=", ", header="train, valid")
 
         self.logger.info("Performing model evaluation...")
         self.logger.info("Test perplexity score: {:.1f}".format(test_model(model, test_tokens)))
@@ -113,5 +121,5 @@ class TrainRnnModelStage(BaseStage):
         plt.yscale("log")
         plt.legend()
         plt.savefig(join(constants.DATA_PATH, "{}.{}.preplexity.png".format(self.parent.topic,
-                                                                                lstm_config)))
+                                                                            lstm_config)))
         return True
