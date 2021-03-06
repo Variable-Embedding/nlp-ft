@@ -1,6 +1,5 @@
 batch_size: 100
 embedding_size: 5
-hidden_size: 2
 learning_rate: 1
 learning_rate_decay: 0.85
 max_norm: 1

@@ -203,13 +203,12 @@ def complete_sequence(model, prefix_tokens, sequence_end_token, max_sequence_len
 
 
 class LSTM(nn.Module):
-    def __init__(self, embedding_size, hidden_size, number_of_layers, dropout_probability,
+    def __init__(self, embedding_size, number_of_layers, dropout_probability,
                  lstm_configuration):
         """Initializetion for LSTM module.
 
         Args:
             embedding_size: number of features in the embedding space.
-            hidden_size: the size of hidden state.
             number_of_layers: number of LSTM layers (for stacked-LSTM).
             droupout_probability: the probability for dropping individual node in the network.
             lstm_configuration: the configuration of the lstm. Possible configurations:
@@ -229,7 +228,7 @@ class LSTM(nn.Module):
 
         if self.configuration != 0:
             self.embedding = nn.Sequential(
-                nn.Linear(embedding_size + 2 * number_of_layers * hidden_size, 2 * embedding_size),
+                nn.Linear((1 + 2 * number_of_layers) * embedding_size, 2 * embedding_size),
                 nn.Tanh(), nn.Dropout(dropout_probability),
                 nn.Linear(2 * embedding_size, 2 * embedding_size),
                 nn.Tanh(), nn.Dropout(dropout_probability),
@@ -241,10 +240,10 @@ class LSTM(nn.Module):
             )
 
         if self.configuration == 2:
-            self.lstm = nn.LSTM(2*embedding_size, hidden_size, num_layers=number_of_layers,
+            self.lstm = nn.LSTM(2*embedding_size, embedding_size, num_layers=number_of_layers,
                                 dropout=dropout_probability)
         else:
-            self.lstm = nn.LSTM(embedding_size, hidden_size, num_layers=number_of_layers,
+            self.lstm = nn.LSTM(embedding_size, embedding_size, num_layers=number_of_layers,
                                 dropout=dropout_probability)
 
     def forward(self, X, states=None):
@@ -266,7 +265,7 @@ class LSTM(nn.Module):
 
 
 class Model(nn.Module):
-    def __init__(self, dictionary_size, embedding_size=10, hidden_size=None, number_of_layers=1,
+    def __init__(self, dictionary_size, embedding_size=10, number_of_layers=1,
                  dropout_probability=0.1, batch_size=64, sequence_length=5, max_norm=2,
                  learning_rate=0.0001, max_init_param=0.01, device="cpu", sequence_step_size=None,
                  learning_rate_decay=1, lstm_configuration="default"):
@@ -275,7 +274,6 @@ class Model(nn.Module):
         Args:
             dictionary_size: number of words in the dictionary.
             embedding_size: number of features in the embedding space.
-            hidden_size: the size of hidden state.
             number_of_layers: number of LSTM layers.
             droupout_probability: the probability for dropping individual node in the network.
             batch_size: the batch size for the model.
@@ -291,7 +289,6 @@ class Model(nn.Module):
         super().__init__()
         self.dictionary_size = dictionary_size
         self.embedding_size = embedding_size
-        self.hidden_size = embedding_size if hidden_size is None else hidden_size
         self.number_of_layers = number_of_layers
         self.learning_rate = learning_rate
         self.batch_size = batch_size
@@ -312,9 +309,8 @@ class Model(nn.Module):
 
         # Set up the architecture.
         self.embedding = nn.Embedding(dictionary_size, embedding_size)
-        self.lstm = LSTM(self.embedding_size, self.hidden_size, number_of_layers,
+        self.lstm = LSTM(self.embedding_size, number_of_layers,
                          dropout_probability, lstm_configuration)
-        #self.fc = nn.Linear(self.hidden_size, dictionary_size)
 
         # Set initial weights.
         for param in self.parameters():
