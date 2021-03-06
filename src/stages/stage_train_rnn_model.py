@@ -104,7 +104,7 @@ class TrainRnnModelStage(BaseStage):
         torch.save(model, file_path)
 
         self.logger.info("Saving training and validation losses to csv...")
-        train_valid_losses = np.column_stack((train_losses, valid_losses))
+        train_valid_losses = np.column_stack((train_losses, valid_losses[1:]))
         file_path = join(constants.DATA_PATH, "{}.{}.losses.csv".format(self.parent.topic,
                                                                         lstm_config))
         np.savetxt(file_path, train_valid_losses, delimiter=", ", header="train, valid")
