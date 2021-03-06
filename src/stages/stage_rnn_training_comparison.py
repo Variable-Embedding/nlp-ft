@@ -53,7 +53,7 @@ class RnnTrainingComparisonStage(BaseStage):
             plt.plot(train_losses, label="{} training perplexity".format(lstm_config))
 
         plt.xlabel("epoch")
-        plt.ylabel("perplexit")
+        plt.ylabel("perplexity")
         plt.yscale("log")
         plt.legend()
         plt.savefig(join(constants.DATA_PATH, "{}.training_comparison.png".format(

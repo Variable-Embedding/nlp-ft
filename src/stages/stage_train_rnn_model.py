@@ -117,7 +117,7 @@ class TrainRnnModelStage(BaseStage):
         plt.plot(valid_losses[1:], label="validation perplexity")
         plt.plot(train_losses, label="training perplexity")
         plt.xlabel("epoch")
-        plt.ylabel("perplexit")
+        plt.ylabel("perplexity")
         plt.yscale("log")
         plt.legend()
         plt.savefig(join(constants.DATA_PATH, "{}.{}.preplexity.png".format(self.parent.topic,
