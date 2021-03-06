@@ -46,11 +46,11 @@ class RnnTrainingComparisonStage(BaseStage):
             file_path = join(constants.DATA_PATH, "{}.{}.losses.csv".format(self.parent.topic,
                                                                             lstm_config))
             train_valid_losses = np.genfromtxt(file_path, delimiter=", ", skip_header=1)
-            train_losses = train_valid_losses[:][0]
-            valid_losses = train_valid_losses[:][1]
+            train_losses = train_valid_losses[:,0]
+            valid_losses = train_valid_losses[:,1]
 
             plt.plot(valid_losses, label="{} validation perplexity".format(lstm_config))
-            plt.plot(train_losses, label="{} training perplexity".format(lstm_config))
+            #plt.plot(train_losses, label="{} training perplexity".format(lstm_config))
 
         plt.xlabel("epoch")
         plt.ylabel("perplexity")
