@@ -43,3 +43,5 @@ stages:
   train_file: tokens.train.pkl
   valid_file: tokens.valid.pkl
   test_file: tokens.test.pkl
+
+- name: rnn_training_comparison
