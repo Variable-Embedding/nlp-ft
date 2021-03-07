@@ -125,12 +125,11 @@ def train_model(model, train_tokens, valid_tokens=None, number_of_epochs=1, logg
             optimizer = torch.optim.SGD(model.parameters(), lr=lr)
             t_losses = []
             model.train()
-            states = generate_initial_states(model)
             for prefix, target in batch_data(train_tokens, model, shuffle=True):
                 progress_bar.update(counter)
                 counter += 1
                 model.zero_grad()
-                states = detach_states(states)
+                states = generate_initial_states(model)
                 output, states = model(prefix, states)
                 loss = loss_function(output, target)
                 t_losses.append(loss.item() / model.batch_size)
