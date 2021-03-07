@@ -4,6 +4,6 @@ max_norm: 10
 max_init_param: 0.1
 number_of_layers: 2
 sequence_length: 30
-sequence_step_size: 15
+sequence_step_size: 10
 dropout_probability: 0.3
 device: gpu
