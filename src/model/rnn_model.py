@@ -222,8 +222,10 @@ class LSTM(nn.Module):
         super().__init__()
         configurations = {
             "default": 0,
-            "var-emb": 1,
-            "res-var-emb": 2,
+            "att-emb": 1,
+            "res-att-emb": 2,
+            "ff-emb": 3,
+            "res-ff-emb": 4,
         }
         self.configuration = configurations[lstm_configuration]
 
@@ -241,7 +243,7 @@ class LSTM(nn.Module):
                 nn.Tanh()
             )
 
-        if self.configuration == 2:
+        if self.configuration == 2 or self.configuration == 4:
             self.lstm = nn.LSTM(2*embedding_size, embedding_size, num_layers=number_of_layers,
                                 dropout=dropout_probability)
         else:
@@ -255,12 +257,18 @@ class LSTM(nn.Module):
             batch_size = X.shape[1]
             for i in range(X.shape[0]):
                 H, C = states
-                attention = torch.cat((X[i].view(1, batch_size, -1), H.view(1, batch_size, -1),
+                X_ = torch.cat((X[i].view(1, batch_size, -1), H.view(1, batch_size, -1),
                                       C.view(1, batch_size, -1)), 2)
-                attention = self.ff(attention.view(1, batch_size, -1))
-                X_ = attention * X[i].clone().view(1, batch_size, -1)
-                if self.configuration == 2:
+                X_ = self.ff(X_.view(1, batch_size, -1))
+
+                # Attention-like mechanism
+                if self.configuration == 2 or self.configuration == 1:
+                    X_ = X_ * X[i].clone().view(1, batch_size, -1)
+
+                # Residual-like mechanism
+                if self.configuration == 2 or self.configuration == 4:
                     X_ = torch.cat((X[i].view(1, batch_size, -1), X_), 2)
+
                 X[i], states = self.lstm(X_, states)
         return X, states
 
