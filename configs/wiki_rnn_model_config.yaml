@@ -1,4 +1,4 @@
-batch_size: 50
+batch_size: 80
 embedding_size: 100
 max_norm: 10
 max_init_param: 0.1

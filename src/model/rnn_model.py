@@ -124,8 +124,6 @@ def train_model(model, train_tokens, valid_tokens=None, number_of_epochs=1,
     with progressbar.ProgressBar(max_value = number_of_epochs * num_iters) as progress_bar:
         for epoch in range(number_of_epochs):
             progress_bar.update(counter)
-            lr = model.learning_rate * (model.learning_rate_decay ** epoch)
-            optimizer = torch.optim.SGD(model.parameters(), lr=lr)
             t_losses = []
             model.train()
             for prefix, target in batch_data(train_tokens, model, shuffle=True):
@@ -232,8 +230,6 @@ class LSTM(nn.Module):
         if self.configuration != 0:
             self.ff = nn.Sequential(
                 nn.Linear((1 + 2 * number_of_layers) * embedding_size, 3 * embedding_size),
-                nn.Tanh(), nn.Dropout(dropout_probability),
-                nn.Linear(3 * embedding_size, 3 * embedding_size),
                 nn.Tanh(), nn.Dropout(dropout_probability),
                 nn.Linear(3 * embedding_size, 3 * embedding_size),
                 nn.Tanh(), nn.Dropout(dropout_probability),
