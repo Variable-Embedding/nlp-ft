@@ -3,9 +3,9 @@ embedding_size: 100
 learning_rate: 1
 learning_rate_decay: 0.85
 max_norm: 10
-max_init_param: 0.5
+max_init_param: 0.1
 number_of_layers: 2
 sequence_length: 30
-dropout_probability: 0.2
-lstm_configuration: default
+sequence_step_size: 15
+dropout_probability: 0.3
 device: gpu
