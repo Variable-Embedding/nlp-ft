@@ -89,7 +89,8 @@ def loss_function(output, target):
     """
     return F.cross_entropy(output.reshape(-1, output.size(2)), target.reshape(-1)) * target.size(1)
 
-def train_model(model, train_tokens, valid_tokens=None, number_of_epochs=1, logger=None):
+def train_model(model, train_tokens, valid_tokens=None, number_of_epochs=1,
+                learning_rate=1, learning_rate_decay=1, logger=None):
     """Train the model in the train data.
 
     Args:
@@ -97,6 +98,8 @@ def train_model(model, train_tokens, valid_tokens=None, number_of_epochs=1, logg
         train_tokens: integer tokens for training.
         valid_tokens: integer tokens for validation.
         number_of_epochs: the number of epochs to run.
+        learning_rate: the learning rate.
+        learning_rate_decay: learning rate decay
         logger: logger to use for printing output.
 
     Returns:
@@ -137,7 +140,7 @@ def train_model(model, train_tokens, valid_tokens=None, number_of_epochs=1, logg
                 with torch.no_grad():
                     norm = nn.utils.clip_grad_norm_(model.parameters(), model.max_norm)
                     for param in model.parameters():
-                        lr = model.learning_rate * (model.learning_rate_decay ** epoch)
+                        lr = learning_rate * (learning_rate_decay ** epoch)
                         param -= lr * param.grad
 
             training_losses.append(np.exp(np.mean(t_losses)))
@@ -267,10 +270,10 @@ class LSTM(nn.Module):
 
 
 class Model(nn.Module):
-    def __init__(self, dictionary_size, embedding_size=10, number_of_layers=1,
-                 dropout_probability=0.1, batch_size=64, sequence_length=5, max_norm=2,
-                 learning_rate=0.0001, max_init_param=0.01, device="cpu", sequence_step_size=None,
-                 learning_rate_decay=1, lstm_configuration="default"):
+    def __init__(self, dictionary_size, embedding_size=100, number_of_layers=1,
+                 dropout_probability=0.3, batch_size=64, sequence_length=30, max_norm=2,
+                 max_init_param=0.01, device="cpu", sequence_step_size=None,
+                 lstm_configuration="default"):
         """Initialization for the model.
 
         Args:
@@ -281,10 +284,8 @@ class Model(nn.Module):
             batch_size: the batch size for the model.
             sequence_length: the token sequence length.
             max_norm: the maximum norm for back propagation.
-            learning_rate: the learning rate.
             max_init_param: the maximum weight after initialization.
             device: the device on which the model will be. (either "cpu" or "gpu")
-            learning_rate_decay: learning rate decay
             sequence_step_size: the step size for batching (the smaller it is, the more overlap).
             lstm_configuration: the configuration of the lstm.
         """
@@ -292,12 +293,10 @@ class Model(nn.Module):
         self.dictionary_size = dictionary_size
         self.embedding_size = embedding_size
         self.number_of_layers = number_of_layers
-        self.learning_rate = learning_rate
         self.batch_size = batch_size
         self.sequence_length = sequence_length
         self.max_norm = max_norm
         self.max_init_param = max_init_param
-        self.learning_rate_decay = learning_rate_decay
 
         if sequence_step_size is None:
             self.sequence_step_size = sequence_length

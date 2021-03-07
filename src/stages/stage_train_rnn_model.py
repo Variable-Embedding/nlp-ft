@@ -114,7 +114,7 @@ class TrainRnnModelStage(BaseStage):
 
             self.logger.info("Performing model evaluation...")
             self.logger.info("Test perplexity score: {:.1f}".format(test_model(model, test_tokens)))
-            self.logger.info("Train perplexity score: {:.1f}".format(test_model(model, train_tokens)))
+            #self.logger.info("Train perplexity score: {:.1f}".format(test_model(model, train_tokens)))
             self.logger.info("Valid perplexity score: {:.1f}".format(valid_losses[-1]))
             plt.figure()
             plt.plot(valid_losses[1:], label="validation perplexity")
