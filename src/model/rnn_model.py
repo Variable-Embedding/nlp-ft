@@ -60,7 +60,7 @@ def batch_data(tokens, model, batch_size=None, sequence_length=None, sequence_st
     if sequence_step_size is None:
         sequence_step_size = model.sequence_step_size
 
-    data = torch.tensor(tokens, dtype=torch.int64).to(model.device)
+    data = torch.tensor(tokens, dtype=torch.int64)
     words_per_batch = data.size(0) // batch_size
     data = data[:words_per_batch * batch_size]
     data = data.view(batch_size, -1)
@@ -71,10 +71,11 @@ def batch_data(tokens, model, batch_size=None, sequence_length=None, sequence_st
 
     for sequence_start in sequence_start_list:
         sequence_end = sequence_start + sequence_length
-        prefix = data[:,sequence_start:sequence_end].transpose(1, 0)
-        target = data[:,sequence_start + 1:sequence_end + 1].transpose(1, 0)
+        prefix = data[:,sequence_start:sequence_end].transpose(1, 0).to(model.device)
+        target = data[:,sequence_start + 1:sequence_end + 1].transpose(1, 0).to(model.device)
         yield prefix, target
-    del data
+        del prefix
+        del target
 
 def loss_function(output, target):
     """Loss function for the model.
@@ -228,15 +229,15 @@ class LSTM(nn.Module):
 
         if self.configuration != 0:
             self.ff = nn.Sequential(
-                nn.Linear((1 + 2 * number_of_layers) * embedding_size, 2 * embedding_size),
+                nn.Linear((1 + 2 * number_of_layers) * embedding_size, 3 * embedding_size),
                 nn.Tanh(), nn.Dropout(dropout_probability),
-                nn.Linear(2 * embedding_size, 2 * embedding_size),
+                nn.Linear(3 * embedding_size, 3 * embedding_size),
                 nn.Tanh(), nn.Dropout(dropout_probability),
-                nn.Linear(2 * embedding_size, 2 * embedding_size),
+                nn.Linear(3 * embedding_size, 3 * embedding_size),
                 nn.Tanh(), nn.Dropout(dropout_probability),
-                nn.Linear(2 * embedding_size, 2 * embedding_size),
+                nn.Linear(3 * embedding_size, 3 * embedding_size),
                 nn.Tanh(), nn.Dropout(dropout_probability),
-                nn.Linear(2 * embedding_size, 2 * embedding_size),
+                nn.Linear(3 * embedding_size, 2 * embedding_size),
                 nn.Tanh(), nn.Dropout(dropout_probability),
                 nn.Linear(2 * embedding_size, embedding_size),
                 nn.Tanh()
