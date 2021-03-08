@@ -1,6 +1,6 @@
 batch_size: 80
 embedding_size: 100
-max_norm: 10
+max_norm: 4
 max_init_param: 0.1
 number_of_layers: 2
 sequence_length: 30
