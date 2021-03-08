@@ -321,6 +321,7 @@ class Model(nn.Module):
         self.embedding = nn.Embedding(dictionary_size, embedding_size)
         self.lstm = LSTM(self.embedding_size, number_of_layers,
                          dropout_probability, lstm_configuration)
+        self.pre_ouput = nn.Linear(self.embedding_size, self.embedding_size)
 
         # Set initial weights.
         for param in self.parameters():
@@ -329,6 +330,7 @@ class Model(nn.Module):
     def forward(self, X, states=None):
         X = self.embedding(X)
         X, states = self.lstm(X, states)
+        X = self.pre_ouput(X)
         output = torch.tensordot(X, self.embedding.weight, dims=([2], [1]))
         #output = self.fc(X)
         return output, states
