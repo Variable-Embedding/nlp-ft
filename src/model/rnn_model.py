@@ -107,6 +107,7 @@ def train_model(model, train_tokens, valid_tokens=None, number_of_epochs=1,
     """
     model.to(model.device)
     num_iters = len(train_tokens) // model.batch_size // model.sequence_step_size
+    num_iters += len(train_tokens) // model.batch_size // model.sequence_length
     training_losses = []
     validation_losses = []
 
@@ -126,20 +127,24 @@ def train_model(model, train_tokens, valid_tokens=None, number_of_epochs=1,
             progress_bar.update(counter)
             t_losses = []
             model.train()
-            for prefix, target in batch_data(train_tokens, model, shuffle=True):
-                progress_bar.update(counter)
-                counter += 1
-                model.zero_grad()
+            for shuffle in [True, False]:
                 states = generate_initial_states(model)
-                output, states = model(prefix, states)
-                loss = loss_function(output, target)
-                t_losses.append(loss.item() / model.batch_size)
-                loss.backward()
-                with torch.no_grad():
-                    norm = nn.utils.clip_grad_norm_(model.parameters(), model.max_norm)
-                    for param in model.parameters():
-                        lr = learning_rate * (learning_rate_decay ** epoch)
-                        param -= lr * param.grad
+                step_size = model.sequence_step_size if shuffle else model.sequence_length
+                for prefix, target in batch_data(train_tokens, model, sequence_step_size=step_size,
+                                                 shuffle=shuffle):
+                    progress_bar.update(counter)
+                    counter += 1
+                    model.zero_grad()
+                    states = generate_initial_states(model) if shuffle else detach_states(states)
+                    output, states = model(prefix, states)
+                    loss = loss_function(output, target)
+                    t_losses.append(loss.item() / model.batch_size)
+                    loss.backward()
+                    with torch.no_grad():
+                        norm = nn.utils.clip_grad_norm_(model.parameters(), model.max_norm)
+                        for param in model.parameters():
+                            lr = learning_rate * (learning_rate_decay ** epoch)
+                            param -= lr * param.grad
 
             training_losses.append(np.exp(np.mean(t_losses)))
             if not valid_tokens is None:
