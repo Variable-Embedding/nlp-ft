@@ -257,8 +257,8 @@ class LSTM(nn.Module):
         self.dropout = nn.Dropout(dropout_probability)
 
     def forward(self, X, states=None):
-        X = self.dropout(X)
         if self.configuration == 0:
+            X = self.dropout(X)
             X, states = self.lstm(X, states)
         else:
             batch_size = X.shape[1]
@@ -266,6 +266,7 @@ class LSTM(nn.Module):
                 H, C = states
                 X_ = torch.cat((X[i].view(1, batch_size, -1), H.view(1, batch_size, -1),
                                       C.view(1, batch_size, -1)), 2)
+                X_ = self.dropout(X_)
                 X_ = self.ff(X_.view(1, batch_size, -1))
 
                 # Attention-like mechanism
@@ -333,6 +334,7 @@ class Model(nn.Module):
 
     def forward(self, X, states=None):
         X = self.embedding(X)
+        X = self.dropout(X)
         X, states = self.lstm(X, states)
         X = self.dropout(X)
         X = self.pre_output(X)
