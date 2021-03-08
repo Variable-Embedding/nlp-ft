@@ -254,8 +254,10 @@ class LSTM(nn.Module):
         else:
             self.lstm = nn.LSTM(embedding_size, embedding_size, num_layers=number_of_layers,
                                 dropout=dropout_probability)
+        self.dropout = nn.Dropout(dropout_probability)
 
     def forward(self, X, states=None):
+        X = self.dropout(X)
         if self.configuration == 0:
             X, states = self.lstm(X, states)
         else:
@@ -274,6 +276,7 @@ class LSTM(nn.Module):
                 if self.configuration == 2 or self.configuration == 4:
                     X_ = torch.cat((X[i].view(1, batch_size, -1), X_), 2)
 
+                X_ = self.dropout(X_)
                 X[i], states = self.lstm(X_, states)
         return X, states
 
