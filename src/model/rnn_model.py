@@ -321,7 +321,7 @@ class Model(nn.Module):
         self.embedding = nn.Embedding(dictionary_size, embedding_size)
         self.lstm = LSTM(self.embedding_size, number_of_layers,
                          dropout_probability, lstm_configuration)
-        self.dropout = nn.Dropout(droupout_probability)
+        self.dropout = nn.Dropout(dropout_probability)
         self.pre_output = nn.Linear(self.embedding_size, self.embedding_size)
 
         # Set initial weights.
