@@ -326,11 +326,7 @@ class Model(nn.Module):
                          dropout_probability, lstm_configuration)
         self.dropout = nn.Dropout(dropout_probability)
         self.pre_output = nn.Sequential(nn.Linear(self.embedding_size, self.embedding_size),
-                                        nn.ReLU(),
-                                        nn.Linear(self.embedding_size, self.embedding_size),
-                                        nn.ReLU(),
-                                        nn.Linear(self.embedding_size, self.embedding_size),
-                                        nn.ReLU(),
+                                        nn.ReLU(), nn.Dropout(dropout_probability),
                                         nn.Linear(self.embedding_size, self.embedding_size))
 
         # Set initial weights.
