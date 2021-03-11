@@ -270,7 +270,7 @@ class LSTM(nn.Module):
 
                 # Attention-like mechanism
                 if self.configuration == 2 or self.configuration == 1:
-                    X_ = X_ * X[i].clone().view(1, batch_size, -1)
+                    X_ = X_ + X[i].clone().view(1, batch_size, -1)
 
                 # Residual-like mechanism
                 if self.configuration == 2 or self.configuration == 4:
