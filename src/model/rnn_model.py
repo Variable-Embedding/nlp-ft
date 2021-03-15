@@ -240,10 +240,10 @@ class LSTM(nn.Module):
                 nn.Tanh(), nn.Dropout(dropout_probability),
                 nn.Linear(3 * embedding_size, 3 * embedding_size),
                 nn.Tanh(), nn.Dropout(dropout_probability),
-                nn.Linear(3 * embedding_size, 3 * embedding_size),
-                nn.Tanh(), nn.Dropout(dropout_probability),
-                nn.Linear(3 * embedding_size, 2 * embedding_size),
-                nn.Tanh(), nn.Dropout(dropout_probability),
+                # nn.Linear(3 * embedding_size, 3 * embedding_size),
+                # nn.Tanh(), nn.Dropout(dropout_probability),
+                # nn.Linear(3 * embedding_size, 2 * embedding_size),
+                # nn.Tanh(), nn.Dropout(dropout_probability),
                 nn.Linear(2 * embedding_size, embedding_size),
                 nn.Tanh()
             )
@@ -260,6 +260,13 @@ class LSTM(nn.Module):
         if self.configuration == 0:
             X = self.dropout(X)
             X, states = self.lstm(X, states)
+        elif self.configuration == 1:
+            batch_size = X.shape[1]
+            for i in range(X.shape[0]):
+                H, C = states
+                X_ = X_ * X[i].clone().view(1, batch_size, -1)
+                X_ = self.dropout(X_)
+                X[i], states = self.lstm(X_, states)
         else:
             batch_size = X.shape[1]
             for i in range(X.shape[0]):
@@ -326,18 +333,20 @@ class Model(nn.Module):
         self.lstm = LSTM(self.embedding_size, number_of_layers,
                          dropout_probability, lstm_configuration)
         self.dropout = nn.Dropout(dropout_probability)
-        self.pre_output = nn.Linear(self.embedding_size, self.embedding_size)
+        # self.pre_output = nn.Linear(self.embedding_size, self.embedding_size)
 
         # Set initial weights.
         for param in self.parameters():
             nn.init.uniform_(param, -max_init_param, max_init_param)
+
+        self.fc = nn.Linear(embedding_size, dictionary_size)
 
     def forward(self, X, states=None):
         X = self.embedding(X)
         X = self.dropout(X)
         X, states = self.lstm(X, states)
         X = self.dropout(X)
-        X = self.pre_output(X)
-        output = torch.tensordot(X, self.embedding.weight, dims=([2], [1]))
-        #output = self.fc(X)
+        # X = self.pre_output(X)
+        # output = torch.tensordot(X, self.embedding.weight, dims=([2], [1]))
+        output = self.fc(X)
         return output, states
