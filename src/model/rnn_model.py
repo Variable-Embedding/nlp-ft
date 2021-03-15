@@ -270,8 +270,8 @@ class LSTM(nn.Module):
         else:
             batch_size = X.shape[1]
             for i in range(X.shape[0]):
-                # H, C = states
-                H, C = detach_states(states)
+                H, C = states
+                # H, C = detach_states(states)
                 X_ = torch.cat((X[i].view(1, batch_size, -1), H.view(1, batch_size, -1),
                                       C.view(1, batch_size, -1)), 2)
                 X_ = self.dropout(X_)
