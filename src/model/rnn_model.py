@@ -238,12 +238,12 @@ class LSTM(nn.Module):
             self.ff = nn.Sequential(
                 nn.Linear((1 + 2 * number_of_layers) * embedding_size, 3 * embedding_size),
                 nn.Tanh(), nn.Dropout(dropout_probability),
-                nn.Linear(3 * embedding_size, 3 * embedding_size),
-                nn.Tanh(), nn.Dropout(dropout_probability),
                 # nn.Linear(3 * embedding_size, 3 * embedding_size),
                 # nn.Tanh(), nn.Dropout(dropout_probability),
-                # nn.Linear(3 * embedding_size, 2 * embedding_size),
+                # nn.Linear(3 * embedding_size, 3 * embedding_size),
                 # nn.Tanh(), nn.Dropout(dropout_probability),
+                nn.Linear(3 * embedding_size, 2 * embedding_size),
+                nn.Tanh(), nn.Dropout(dropout_probability),
                 nn.Linear(2 * embedding_size, embedding_size),
                 nn.Tanh()
             )
@@ -270,7 +270,7 @@ class LSTM(nn.Module):
         else:
             batch_size = X.shape[1]
             for i in range(X.shape[0]):
-                H, C = states
+                H, C = detach_states(states)
                 X_ = torch.cat((X[i].view(1, batch_size, -1), H.view(1, batch_size, -1),
                                       C.view(1, batch_size, -1)), 2)
                 X_ = self.dropout(X_)
