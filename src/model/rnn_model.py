@@ -260,13 +260,13 @@ class LSTM(nn.Module):
         if self.configuration == 0:
             X = self.dropout(X)
             X, states = self.lstm(X, states)
-        elif self.configuration == 1:
-            batch_size = X.shape[1]
-            for i in range(X.shape[0]):
-                H, C = states
-                X_ = X_ * X[i].clone().view(1, batch_size, -1)
-                X_ = self.dropout(X_)
-                X[i], states = self.lstm(X_, states)
+        # elif self.configuration == 1:
+        #     batch_size = X.shape[1]
+        #     for i in range(X.shape[0]):
+        #         H, C = states
+        #         X_ = X_ * X[i].clone().view(1, batch_size, -1)
+        #         X_ = self.dropout(X_)
+        #         X[i], states = self.lstm(X_, states)
         else:
             batch_size = X.shape[1]
             for i in range(X.shape[0]):
