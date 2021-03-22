@@ -3,10 +3,17 @@
 from src.stages.base_stage import BaseStage
 from src.util import constants
 
+from nltk.stem import WordNetLemmatizer
+from nltk.tokenize import word_tokenize
 from os.path import join
 
 import logging
+import nltk
 import re
+
+nltk.download('punkt')
+nltk.download('wordnet')
+
 
 class PreProcessingStage(BaseStage):
     """Stage for pre processing text.
@@ -49,6 +56,7 @@ class PreProcessingStage(BaseStage):
         with open(input_file_path, "r") as file:
             text = file.read()
 
+        lemmatizer = WordNetLemmatizer()
         articles = text.split("<article_end>")
         for i in range(len(articles)):
             article = articles[i]
@@ -59,15 +67,15 @@ class PreProcessingStage(BaseStage):
             article = re.sub('\n\s*', ' new_line_character ', article)
             article = re.sub('<unk>', ' unkown_token ', article)
 
-            #tokens = word_tokenize(article)
-            #for j in range(len(tokens)):
-            #    token = tokens[j]
-            #    token = token.lower()
-            #    token = token.encode("ascii", "ignore")
-            #    token = token.decode()
-            #    token = lemmatizer.lemmatize(token)
-            #    tokens[j] = token
-            #article = " ".join(tokens)
+            tokens = word_tokenize(article)
+            for j in range(len(tokens)):
+                token = tokens[j]
+                token = token.lower()
+                token = token.encode("ascii", "ignore")
+                token = token.decode()
+                token = lemmatizer.lemmatize(token)
+                tokens[j] = token
+            article = " ".join(tokens)
 
             article = re.sub('new_line_character', ' </s> ', article)
             article = re.sub('unkown_token', '<unk>', article)

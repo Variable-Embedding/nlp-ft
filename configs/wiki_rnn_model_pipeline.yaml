@@ -26,6 +26,20 @@ stages:
 - name: train_rnn_model
   training_config_file: rnn_training_config.yaml
   model_config_file: wiki_rnn_model_config.yaml
+  lstm_configs:
+    - default
+    - att-emb
+    - res-att-emb
+    - ff-emb
+    - res-ff-emb
   train_file: tokens.train.pkl
   valid_file: tokens.valid.pkl
   test_file: tokens.test.pkl
+
+- name: rnn_training_comparison
+  lstm_configs:
+    - default
+    - att-emb
+    - res-att-emb
+    - ff-emb
+    - res-ff-emb

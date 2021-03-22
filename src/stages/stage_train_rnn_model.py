@@ -10,9 +10,10 @@ from os.path import join
 
 import json
 import logging
+import matplotlib.pyplot as plt
+import numpy as np
 import re
 import termplotlib as tpl
-import matplotlib.pyplot as plt
 import torch
 import yaml
 
@@ -24,7 +25,7 @@ class TrainRnnModelStage(BaseStage):
     logger = logging.getLogger("pipeline").getChild("train_rnn_model")
 
     def __init__(self, parent=None, train_file=None, test_file=None, valid_file=None,
-                 model_config_file=None, training_config_file=None):
+                 model_config_file=None, training_config_file=None, lstm_configs=None):
         """Initialization for model training stage.
 
         Args:
@@ -34,6 +35,7 @@ class TrainRnnModelStage(BaseStage):
             valid_file: the file with integer tokens used for validation.
             model_config_file: the file with model configuration.
             training_config_file: the file with training configuration.
+            lstm_config: configuration for lstm model.
         """
         super(TrainRnnModelStage, self).__init__(parent)
         self.train_file = train_file
@@ -41,6 +43,7 @@ class TrainRnnModelStage(BaseStage):
         self.valid_file = valid_file
         self.model_config_filepath = join(constants.CONFIG_PATH, model_config_file)
         self.training_config_filepath = join(constants.CONFIG_PATH, training_config_file)
+        self.lstm_configs = ["default"] if lstm_configs is None else lstm_configs
 
     def pre_run(self):
         """The function that is executed before the stage is run.
@@ -89,26 +92,37 @@ class TrainRnnModelStage(BaseStage):
             dictionary = json.loads(file.read())
         self.logger.info("Dictionary contains {} tokens.".format(len(dictionary)))
 
-        model = Model(dictionary_size=len(dictionary), **model_config)
-        self.logger.info("Starting model training...")
-        train_losses, valid_losses = train_model(model=model, train_tokens=train_tokens, valid_tokens=valid_tokens,
-                                                 logger=self.logger, **training_config)
-        self.logger.info("Finished model training.")
-        self.logger.info("Saving the model...")
-        file_path = join(constants.DATA_PATH, "{}.model.pkl".format(self.parent.topic))
-        torch.save(model, file_path)
+        for lstm_config in self.lstm_configs:
+            model_config["lstm_configuration"] = lstm_config
+            model = Model(dictionary_size=len(dictionary), **model_config)
+            self.logger.info("Starting model training with lstm configuration {} ...".format(
+                lstm_config))
+            train_losses, valid_losses = train_model(model=model, train_tokens=train_tokens,
+                                                     valid_tokens=valid_tokens, logger=self.logger,
+                                                     **training_config)
+            self.logger.info("Finished model training.")
+            self.logger.info("Saving the model...")
+            file_path = join(constants.DATA_PATH, "{}.{}.model.pkl".format(self.parent.topic,
+                                                                           lstm_config))
+            torch.save(model, file_path)
 
-        self.logger.info("Performing model evaluation...")
-        self.logger.info("Test preplexity score: {:.1f}".format(test_model(model, test_tokens)))
-        self.logger.info("Train preplexity score: {:.1f}".format(test_model(model, train_tokens)))
-        self.logger.info("Valid preplexity score: {:.1f}".format(valid_losses[-1]))
-        plt.figure()
-        plt.plot(valid_losses[1:], label="validation perplexity")
-        plt.plot(train_losses, label="training perplexity")
-        plt.xlabel("epoch")
-        plt.ylabel("preplexity")
-        plt.yscale('log')
-        plt.legend()
-        plt.savefig(join(constants.DATA_PATH, "{}.preplexity.png".format(self.parent.topic)))
-        plt.show()
+            self.logger.info("Saving training and validation losses to csv...")
+            train_valid_losses = np.column_stack((train_losses, valid_losses[1:]))
+            file_path = join(constants.DATA_PATH, "{}.{}.losses.csv".format(self.parent.topic,
+                                                                            lstm_config))
+            np.savetxt(file_path, train_valid_losses, delimiter=", ", header="train, valid")
+
+            self.logger.info("Performing model evaluation...")
+            self.logger.info("Test perplexity score: {:.1f}".format(test_model(model, test_tokens)))
+            #self.logger.info("Train perplexity score: {:.1f}".format(test_model(model, train_tokens)))
+            self.logger.info("Valid perplexity score: {:.1f}".format(valid_losses[-1]))
+            plt.figure()
+            plt.plot(valid_losses[1:], label="validation perplexity")
+            plt.plot(train_losses, label="training perplexity")
+            plt.xlabel("epoch")
+            plt.ylabel("perplexity")
+            plt.yscale("log")
+            plt.legend()
+            plt.savefig(join(constants.DATA_PATH, "{}.{}.preplexity.png".format(self.parent.topic,
+                                                                                lstm_config)))
         return True

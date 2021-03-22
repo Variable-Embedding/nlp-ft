@@ -4,6 +4,8 @@ __pycache__/
 *$py.class
 
 /logs
+/tmp/*pre_processed*
+/tmp/*tokens*
 
 /srilm-1.7.3*
 
