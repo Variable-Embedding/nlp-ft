@@ -369,7 +369,11 @@ class Model(nn.Module):
     
     # Set training seps
     def set_pretrain(self):
-      self.lstm.set_train_mode(1)
+        for param in self.embedding.parameters():
+            param.requires_grad = True
+        self.lstm.set_train_mode(1)
     
     def set_main_train(self):
-      self.lstm.set_train_mode(2)
+        for param in self.embedding.parameters():
+            param.requires_grad = False
+        self.lstm.set_train_mode(2)
