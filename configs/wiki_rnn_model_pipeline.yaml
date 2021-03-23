@@ -28,10 +28,7 @@ stages:
   model_config_file: wiki_rnn_model_config.yaml
   lstm_configs:
     - default
-    - att-emb
-    - res-att-emb
-    - ff-emb
-    - res-ff-emb
+    - ff-emb-pretrain
   train_file: tokens.train.pkl
   valid_file: tokens.valid.pkl
   test_file: tokens.test.pkl
@@ -39,7 +36,4 @@ stages:
 - name: rnn_training_comparison
   lstm_configs:
     - default
-    - att-emb
-    - res-att-emb
-    - ff-emb
-    - res-ff-emb
+    - ff-emb-pretrain

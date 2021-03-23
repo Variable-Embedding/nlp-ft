@@ -143,8 +143,10 @@ def train_model(model, train_tokens, valid_tokens=None, number_of_epochs=1,
                     with torch.no_grad():
                         norm = nn.utils.clip_grad_norm_(model.parameters(), model.max_norm)
                         for param in model.parameters():
-                            lr = learning_rate * (learning_rate_decay ** epoch)
-                            param -= lr * param.grad
+                            # Only update if grad is used (params not frozen)
+                            if param.grad != None:
+                                lr = learning_rate * (learning_rate_decay ** epoch)
+                                param -= lr * param.grad
 
             training_losses.append(np.exp(np.mean(t_losses)))
             if not valid_tokens is None:
@@ -231,8 +233,11 @@ class LSTM(nn.Module):
             "res-att-emb": 2,
             "ff-emb": 3,
             "res-ff-emb": 4,
+            "ff-emb-pretrain": 5,
         }
         self.configuration = configurations[lstm_configuration]
+        # Used if model has multiple training steps
+        self.training_step = 0
 
         if self.configuration != 0:
             self.ff = nn.Sequential(
@@ -256,7 +261,8 @@ class LSTM(nn.Module):
         self.dropout = nn.Dropout(dropout_probability)
 
     def forward(self, X, states=None):
-        if self.configuration == 0:
+        # Only use lstm if model is default or training step is 0
+        if self.configuration == 0 or self.training_step == 1:
             X = self.dropout(X)
             X, states = self.lstm(X, states)
         else:
@@ -279,6 +285,27 @@ class LSTM(nn.Module):
                 X_ = self.dropout(X_)
                 X[i], states = self.lstm(X_, states)
         return X, states
+    
+    def set_train_mode(self, mode):
+      self.training_step = mode
+
+      # Only lstm is on during pretraining
+      if self.training_step == 1:
+          print("set train 1")
+          for param in self.ff.parameters():
+              param.requires_grad = False
+          
+          for param in self.lstm.parameters():
+              param.requires_grad = True
+      
+      # Only ff is on after pretraining
+      if self.training_step == 2 and self.configuration != 0:
+          print("set train 2")
+          for param in self.ff.parameters():
+              param.requires_grad = True
+          
+          for param in self.lstm.parameters():
+              param.requires_grad = False
 
 
 class Model(nn.Module):
@@ -339,3 +366,10 @@ class Model(nn.Module):
         #X = self.pre_output(X)
         output = torch.tensordot(X, self.embedding.weight, dims=([2], [1]))
         return output, states
+    
+    # Set training seps
+    def set_pretrain(self):
+      self.lstm.set_train_mode(1)
+    
+    def set_main_train(self):
+      self.lstm.set_train_mode(2)

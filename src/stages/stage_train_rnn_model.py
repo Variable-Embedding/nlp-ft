@@ -97,9 +97,27 @@ class TrainRnnModelStage(BaseStage):
             model = Model(dictionary_size=len(dictionary), **model_config)
             self.logger.info("Starting model training with lstm configuration {} ...".format(
                 lstm_config))
+
+            # Pretrain if model requires
+            # NOTE: losses will be overwritten, but only using the last ones make sense anyway
+            if lstm_config == "ff-emb-pretrain":
+              # Set pretrain step
+              self.logger.info("Pretraining step")
+              model.set_pretrain()
+              # Pretrain
+              train_losses, valid_losses = train_model(model=model, train_tokens=train_tokens,
+                                                     valid_tokens=valid_tokens, logger=self.logger,
+                                                     **training_config)
+              # Set back to main training
+              self.logger.info("Main training step")
+              model.set_main_train()
+
+            
+            # Main training
             train_losses, valid_losses = train_model(model=model, train_tokens=train_tokens,
                                                      valid_tokens=valid_tokens, logger=self.logger,
                                                      **training_config)
+
             self.logger.info("Finished model training.")
             self.logger.info("Saving the model...")
             file_path = join(constants.DATA_PATH, "{}.{}.model.pkl".format(self.parent.topic,
