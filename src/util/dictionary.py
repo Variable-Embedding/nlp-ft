@@ -89,7 +89,6 @@ def get_glove_embeddings(dict_fn, dim):
         vocab = json.loads(jf.read())
 
     emb = np.zeros((len(vocab), dim))
-    # print(vocab)
 
     found = 0
     initialized = 0
@@ -100,6 +99,7 @@ def get_glove_embeddings(dict_fn, dim):
             emb[id, :] = glove[v]
         else:
             initialized += 1
-            emb[id, :] = np.random.rand(dim)
+            # emb[id, :] = np.random.rand(dim)
+            emb[id, :] = np.zeros(dim)
     print("Found",found,"Initialized",initialized)
     return emb
