@@ -89,7 +89,7 @@ def get_glove_embeddings(dict_fn, dim):
         vocab = json.loads(jf.read())
 
     emb = np.zeros((len(vocab), dim))
-    print(vocab)
+    # print(vocab)
 
     i = 0
     for v, [id, count] in vocab.items():
