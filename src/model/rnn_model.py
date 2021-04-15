@@ -337,7 +337,7 @@ class Model(nn.Module):
         # Set up the architecture.
         self.embedding = nn.Embedding(dictionary_size, embedding_size)
         if embedding_config == 'glove':
-            emb = get_glove_embeddings("data/wiki.dictionary.json")
+            emb = get_glove_embeddings("data/wiki.dictionary.json", embedding_size)
             self.embedding.weight.data.copy_(torch.from_numpy(emb))
             if freeze_embeddings: self.embedding.weight.requires_grad = False
         self.lstm = LSTM(self.embedding_size, number_of_layers,

@@ -7,3 +7,4 @@ sequence_length: 30
 sequence_step_size: 10
 dropout_probability: 0.1
 device: gpu
+embedding_config: glove

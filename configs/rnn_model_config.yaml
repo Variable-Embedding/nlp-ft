@@ -10,3 +10,4 @@ sequence_step_size: 10
 dropout_probability: 0.1
 lstm_configuration: default
 device: gpu
+embedding_config: glove
