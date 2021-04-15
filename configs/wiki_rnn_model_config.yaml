@@ -7,4 +7,4 @@ sequence_length: 30
 dropout_probability: 0.1
 device: gpu
 embedding_config: glove
-freeze_embeddings: True
+#freeze_embeddings: True

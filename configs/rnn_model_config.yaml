@@ -11,4 +11,4 @@ dropout_probability: 0.1
 lstm_configuration: default
 device: gpu
 embedding_config: glove
-freeze_embeddings: True
+#freeze_embeddings: True
