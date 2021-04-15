@@ -78,6 +78,7 @@ def apply_dictionary_to_tokens(dictionary, tokens):
     return [dictionary[t][0] for t in tokens]
 
 def get_glove_embeddings(dict_fn, dim):
+    print("Getting Glove Embeddings")
     glove = {}
     with open('data/glove_6b/glove.6B.' + str(dim) + 'd.txt', 'r') as f:
         for l in f:
