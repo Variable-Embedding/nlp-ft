@@ -4,7 +4,6 @@ max_norm: 4
 max_init_param: 0.1
 number_of_layers: 2
 sequence_length: 30
-sequence_step_size: 10
 dropout_probability: 0.1
 device: gpu
 embedding_config: glove
