@@ -145,8 +145,9 @@ def train_model(model, train_tokens, valid_tokens=None, number_of_epochs=1,
                         norm = nn.utils.clip_grad_norm_(model.parameters(), model.max_norm)
                         for param in model.parameters():
                             lr = learning_rate * (learning_rate_decay ** epoch)
-                            if param.grad:
-                                param -= lr * param.grad
+                            # if param.grad:
+                            print(type(param), param.size())
+                            param -= lr * param.grad
 
             training_losses.append(np.exp(np.mean(t_losses)))
             if not valid_tokens is None:
