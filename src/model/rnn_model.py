@@ -226,7 +226,6 @@ class LSTM(nn.Module):
                             layer
             res-var-emb     The input and states are passed through forward and appended with input
         """
-
         super().__init__()
         configurations = {
             "default": 0,
@@ -234,24 +233,29 @@ class LSTM(nn.Module):
             "res-att-emb": 2,
             "ff-emb": 3,
             "res-ff-emb": 4,
+            "ff-emb-plstm": 5,
         }
         self.configuration = configurations[lstm_configuration]
 
         if self.configuration != 0:
             self.ff = nn.Sequential(
                 nn.Linear((1 + 2 * number_of_layers) * embedding_size, 3 * embedding_size),
-                nn.ReLU(), nn.Dropout(dropout_probability),
-                nn.Linear(3 * embedding_size, 3 * embedding_size),
-                nn.ReLU(), nn.Dropout(dropout_probability),
-                nn.Linear(3 * embedding_size, 3 * embedding_size),
-                nn.ReLU(), nn.Dropout(dropout_probability),
+                nn.Tanh(), nn.Dropout(dropout_probability),
+                # nn.Linear(3 * embedding_size, 3 * embedding_size),
+                # nn.Tanh(), nn.Dropout(dropout_probability),
+                # nn.Linear(3 * embedding_size, 3 * embedding_size),
+                # nn.Tanh(), nn.Dropout(dropout_probability),
                 nn.Linear(3 * embedding_size, 2 * embedding_size),
-                nn.ReLU(), nn.Dropout(dropout_probability),
-                nn.Linear(2 * embedding_size, embedding_size)
+                nn.Tanh(), nn.Dropout(dropout_probability),
+                nn.Linear(2 * embedding_size, embedding_size),
+                nn.Tanh()
             )
 
         if self.configuration == 2 or self.configuration == 4:
-            self.lstm = nn.LSTM(2 * embedding_size, embedding_size, num_layers=number_of_layers,
+            self.lstm = nn.LSTM(2*embedding_size, embedding_size, num_layers=number_of_layers,
+                                dropout=dropout_probability)
+        if self.configuration == 5:
+            self.plstm = nn.LSTM(embedding_size, embedding_size, num_layers=number_of_layers,
                                 dropout=dropout_probability)
         else:
             self.lstm = nn.LSTM(embedding_size, embedding_size, num_layers=number_of_layers,
@@ -262,26 +266,38 @@ class LSTM(nn.Module):
         if self.configuration == 0:
             X = self.dropout(X)
             X, states = self.lstm(X, states)
+        # elif self.configuration == 1:
+        #     batch_size = X.shape[1]
+        #     for i in range(X.shape[0]):
+        #         H, C = states
+        #         X_ = X_ * X[i].clone().view(1, batch_size, -1)
+        #         X_ = self.dropout(X_)
+        #         X[i], states = self.lstm(X_, states)
         else:
             batch_size = X.shape[1]
             for i in range(X.shape[0]):
                 H, C = states
+                # H, C = detach_states(states)
                 X_ = torch.cat((X[i].view(1, batch_size, -1), H.view(1, batch_size, -1),
-                                C.view(1, batch_size, -1)), 2)
+                                      C.view(1, batch_size, -1)), 2)
                 X_ = self.dropout(X_)
                 X_ = self.ff(X_.view(1, batch_size, -1))
 
                 # Attention-like mechanism
                 if self.configuration == 2 or self.configuration == 1:
-                    X_ = X_ + X[i].clone().view(1, batch_size, -1)
+                    X_ = X_ * X[i].clone().view(1, batch_size, -1)
 
+                print("x shape",X[i].view(1, batch_size, -1).shape)
+                print("x_ shape",X_.shape)
                 # Residual-like mechanism
                 if self.configuration == 2 or self.configuration == 4:
                     X_ = torch.cat((X[i].view(1, batch_size, -1), X_), 2)
+                print("x_ after shape",X_.shape)
 
                 X_ = self.dropout(X_)
                 X[i], states = self.lstm(X_, states)
         return X, states
+
 
 class Model(nn.Module):
     def __init__(self, dictionary_size, embedding_size=100, number_of_layers=1,
@@ -336,7 +352,9 @@ class Model(nn.Module):
         if embedding_config == 'glove':
             emb = get_glove_embeddings("data/wiki.dictionary.json", embedding_size)
             self.embedding.weight.data.copy_(torch.from_numpy(emb))
-            if freeze_embeddings: self.embedding.weight.requires_grad = False
+            if freeze_embeddings:
+                print("Freezing Embeddings")
+                self.embedding.weight.requires_grad = False
 
         # self.fc = nn.Linear(embedding_size, dictionary_size)
 
