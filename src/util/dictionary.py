@@ -6,6 +6,7 @@ from collections import Counter
 from os.path import join
 
 import json
+import numpy as np
 
 def dictionary_file_path(topic):
     """Returns a path to a dictionary file.
@@ -75,3 +76,25 @@ def apply_dictionary_to_tokens(dictionary, tokens):
         Integer tokens.
     """
     return [dictionary[t][0] for t in tokens]
+
+def get_glove_embeddings(dict_fn, dim):
+    glove = {}
+    with open('data/glove_6b/glove.6B.' + str(dim) + 'd.txt', 'r') as f:
+        for l in f:
+            line = l.split()
+            glove[line[0]] = line[1:]
+
+    with open(dict_fn) as jf:
+        vocab = json.loads(jf.read())
+
+    emb = np.zeros((len(vocab), dim))
+    print(vocab)
+
+    i = 0
+    for v, [id, count] in vocab.items():
+        v = v.lower()
+        if v in glove:
+            emb[id, :] = glove[v]
+        else:
+            emb[id, :] = np.random.rand(dim)
+    return emb

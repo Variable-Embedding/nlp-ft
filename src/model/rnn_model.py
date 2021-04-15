@@ -6,6 +6,7 @@ import torch.nn.functional as F
 
 import numpy as np
 import progressbar
+from src.util.dictionary import get_glove_embeddings
 import time
 
 
@@ -231,6 +232,7 @@ class LSTM(nn.Module):
             "res-att-emb": 2,
             "ff-emb": 3,
             "res-ff-emb": 4,
+            "ff-emb-plstm": 5,
         }
         self.configuration = configurations[lstm_configuration]
 
@@ -250,6 +252,9 @@ class LSTM(nn.Module):
 
         if self.configuration == 2 or self.configuration == 4:
             self.lstm = nn.LSTM(2*embedding_size, embedding_size, num_layers=number_of_layers,
+                                dropout=dropout_probability)
+        if self.configuration == 5:
+            self.plstm = nn.LSTM(embedding_size, embedding_size, num_layers=number_of_layers,
                                 dropout=dropout_probability)
         else:
             self.lstm = nn.LSTM(embedding_size, embedding_size, num_layers=number_of_layers,
@@ -294,7 +299,7 @@ class Model(nn.Module):
     def __init__(self, dictionary_size, embedding_size=100, number_of_layers=1,
                  dropout_probability=0.3, batch_size=64, sequence_length=30, max_norm=2,
                  max_init_param=0.01, device="cpu", sequence_step_size=None,
-                 lstm_configuration="default"):
+                 lstm_configuration="default", embedding_config='default', freeze_embeddings = False):
         """Initialization for the model.
 
         Args:
@@ -331,10 +336,14 @@ class Model(nn.Module):
 
         # Set up the architecture.
         self.embedding = nn.Embedding(dictionary_size, embedding_size)
+        if embedding_config == 'glove':
+            emb = get_glove_embeddings("data/wiki.dictionary.json")
+            self.embedding.weight.data.copy_(torch.from_numpy(emb))
+            if freeze_embeddings: self.embedding.weight.requires_grad = False
         self.lstm = LSTM(self.embedding_size, number_of_layers,
                          dropout_probability, lstm_configuration)
         self.dropout = nn.Dropout(dropout_probability)
-        # self.pre_output = nn.Linear(self.embedding_size, self.embedding_size)
+        self.pre_output = nn.Linear(self.embedding_size, self.embedding_size)
 
         # Set initial weights.
         for param in self.parameters():
@@ -347,7 +356,7 @@ class Model(nn.Module):
         X = self.dropout(X)
         X, states = self.lstm(X, states)
         X = self.dropout(X)
-        # X = self.pre_output(X)
-        # output = torch.tensordot(X, self.embedding.weight, dims=([2], [1]))
-        output = self.fc(X)
+        X = self.pre_output(X)
+        output = torch.tensordot(X, self.embedding.weight, dims=([2], [1]))
+        output = self.fc(output)
         return output, states
