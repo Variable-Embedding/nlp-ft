@@ -287,9 +287,12 @@ class LSTM(nn.Module):
                 if self.configuration == 2 or self.configuration == 1:
                     X_ = X_ * X[i].clone().view(1, batch_size, -1)
 
+                print("x shape",X[i].view(1, batch_size, -1).shape)
+                print("x_ shape",X_.shape)
                 # Residual-like mechanism
                 if self.configuration == 2 or self.configuration == 4:
                     X_ = torch.cat((X[i].view(1, batch_size, -1), X_), 2)
+                print("x_ after shape",X_.shape)
 
                 X_ = self.dropout(X_)
                 X[i], states = self.lstm(X_, states)
