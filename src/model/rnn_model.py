@@ -343,7 +343,7 @@ class Model(nn.Module):
         self.lstm = LSTM(self.embedding_size, number_of_layers,
                          dropout_probability, lstm_configuration)
         self.dropout = nn.Dropout(dropout_probability)
-        self.pre_output = nn.Linear(self.embedding_size, self.embedding_size)
+        # self.pre_output = nn.Linear(self.embedding_size, self.embedding_size)
 
         # Set initial weights.
         for param in self.parameters():
@@ -356,9 +356,10 @@ class Model(nn.Module):
         X = self.dropout(X)
         X, states = self.lstm(X, states)
         X = self.dropout(X)
-        X = self.pre_output(X)
+        # X = self.pre_output(X)
         print("x shape",X.shape)
         print("embedding weight shape",self.embedding.weight.shape)
         output = torch.tensordot(X, self.embedding.weight, dims=([2], [1]))
+        print("output shape",self.embedding.weight.shape)
         output = self.fc(output)
         return output, states
