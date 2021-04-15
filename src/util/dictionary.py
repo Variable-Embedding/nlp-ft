@@ -91,11 +91,15 @@ def get_glove_embeddings(dict_fn, dim):
     emb = np.zeros((len(vocab), dim))
     # print(vocab)
 
-    i = 0
+    found = 0
+    initialized = 0
     for v, [id, count] in vocab.items():
         v = v.lower()
         if v in glove:
+            found += 1
             emb[id, :] = glove[v]
         else:
+            initialized += 1
             emb[id, :] = np.random.rand(dim)
+    print("Found",found,"Initialized",initialized)
     return emb
