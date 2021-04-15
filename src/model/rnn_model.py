@@ -336,10 +336,6 @@ class Model(nn.Module):
 
         # Set up the architecture.
         self.embedding = nn.Embedding(dictionary_size, embedding_size)
-        if embedding_config == 'glove':
-            emb = get_glove_embeddings("data/wiki.dictionary.json", embedding_size)
-            self.embedding.weight.data.copy_(torch.from_numpy(emb))
-            if freeze_embeddings: self.embedding.weight.requires_grad = False
         self.lstm = LSTM(self.embedding_size, number_of_layers,
                          dropout_probability, lstm_configuration)
         self.dropout = nn.Dropout(dropout_probability)
@@ -349,7 +345,12 @@ class Model(nn.Module):
         for param in self.parameters():
             nn.init.uniform_(param, -max_init_param, max_init_param)
 
-        self.fc = nn.Linear(embedding_size, dictionary_size)
+        if embedding_config == 'glove':
+            emb = get_glove_embeddings("data/wiki.dictionary.json", embedding_size)
+            self.embedding.weight.data.copy_(torch.from_numpy(emb))
+            if freeze_embeddings: self.embedding.weight.requires_grad = False
+
+        # self.fc = nn.Linear(embedding_size, dictionary_size)
 
     def forward(self, X, states=None):
         X = self.embedding(X)
@@ -357,9 +358,9 @@ class Model(nn.Module):
         X, states = self.lstm(X, states)
         X = self.dropout(X)
         # X = self.pre_output(X)
-        print("x shape",X.shape)
-        print("embedding weight shape",self.embedding.weight.shape)
+        # print("x shape",X.shape)
+        # print("embedding weight shape",self.embedding.weight.shape)
         output = torch.tensordot(X, self.embedding.weight, dims=([2], [1]))
-        print("output shape",self.embedding.weight.shape)
-        output = self.fc(output)
+        # print("output shape",self.embedding.weight.shape)
+        # output = self.fc(output)
         return output, states
