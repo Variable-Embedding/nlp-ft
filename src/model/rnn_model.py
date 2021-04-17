@@ -230,6 +230,7 @@ class LSTM(nn.Module):
         super().__init__()
         configurations = {
             "default": 0,
+            "att": 5,
             "att-emb": 1,
             "res-att-emb": 2,
             "ff-emb": 3,
@@ -238,13 +239,14 @@ class LSTM(nn.Module):
         self.configuration = configurations[lstm_configuration]
 
         if self.configuration != 0:
+            inc_emb = 1 if self.configuration == 5 else 0
             self.ff = nn.Sequential(
-                nn.Linear((1 + 2 * number_of_layers) * embedding_size, 3 * embedding_size),
+                nn.Linear((inc_emb + 2 * number_of_layers) * embedding_size, 3 * embedding_size),
                 nn.ReLU(), nn.Dropout(dropout_probability),
-                nn.Linear(3 * embedding_size, 3 * embedding_size),
-                nn.ReLU(), nn.Dropout(dropout_probability),
-                nn.Linear(3 * embedding_size, 3 * embedding_size),
-                nn.ReLU(), nn.Dropout(dropout_probability),
+                # nn.Linear(3 * embedding_size, 3 * embedding_size),
+                # nn.ReLU(), nn.Dropout(dropout_probability),
+                # nn.Linear(3 * embedding_size, 3 * embedding_size),
+                # nn.ReLU(), nn.Dropout(dropout_probability),
                 nn.Linear(3 * embedding_size, 2 * embedding_size),
                 nn.ReLU(), nn.Dropout(dropout_probability),
                 nn.Linear(2 * embedding_size, embedding_size)
@@ -266,13 +268,16 @@ class LSTM(nn.Module):
             batch_size = X.shape[1]
             for i in range(X.shape[0]):
                 H, C = states
-                X_ = torch.cat((X[i].view(1, batch_size, -1), H.view(1, batch_size, -1),
-                                C.view(1, batch_size, -1)), 2)
+                if self.configuration == 5: # only use context
+                    X_ = torch.cat((H.view(1, batch_size, -1), C.view(1, batch_size, -1)), 2)
+                else:
+                    X_ = torch.cat((X[i].view(1, batch_size, -1), H.view(1, batch_size, -1),
+                                    C.view(1, batch_size, -1)), 2)
                 X_ = self.dropout(X_)
                 X_ = self.ff(X_.view(1, batch_size, -1))
 
                 # Attention-like mechanism
-                if self.configuration == 2 or self.configuration == 1:
+                if self.configuration == 2 or self.configuration == 1 or self.configuration == 5:
                     X_ = X_ + X[i].clone().view(1, batch_size, -1)
 
                 # Residual-like mechanism
