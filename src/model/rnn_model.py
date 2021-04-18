@@ -243,10 +243,10 @@ class LSTM(nn.Module):
             self.ff = nn.Sequential(
                 nn.Linear((inc_emb + 2 * number_of_layers) * embedding_size, 3 * embedding_size),
                 nn.ReLU(), nn.Dropout(dropout_probability),
-                # nn.Linear(3 * embedding_size, 3 * embedding_size),
-                # nn.ReLU(), nn.Dropout(dropout_probability),
-                # nn.Linear(3 * embedding_size, 3 * embedding_size),
-                # nn.ReLU(), nn.Dropout(dropout_probability),
+                nn.Linear(3 * embedding_size, 3 * embedding_size),
+                nn.ReLU(), nn.Dropout(dropout_probability),
+                nn.Linear(3 * embedding_size, 3 * embedding_size),
+                nn.ReLU(), nn.Dropout(dropout_probability),
                 nn.Linear(3 * embedding_size, 2 * embedding_size),
                 nn.ReLU(), nn.Dropout(dropout_probability),
                 nn.Linear(2 * embedding_size, embedding_size)
