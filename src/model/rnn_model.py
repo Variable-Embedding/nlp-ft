@@ -239,7 +239,7 @@ class LSTM(nn.Module):
         self.configuration = configurations[lstm_configuration]
 
         if self.configuration != 0:
-            inc_emb = 1 if self.configuration == 5 else 0
+            inc_emb = 0 if self.configuration == 5 else 1
             self.ff = nn.Sequential(
                 nn.Linear((inc_emb + 2 * number_of_layers) * embedding_size, 3 * embedding_size),
                 nn.ReLU(), nn.Dropout(dropout_probability),
