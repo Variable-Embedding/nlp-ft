@@ -20,22 +20,20 @@ import requests
 def download_embeddings(embedding_alias, embedding_type, logger):
     """Get and process GloVe embeddings.
     """
-    if "." in embedding_type:
-        embedding_type = embedding_type.replace(".", '_')
 
-    embedding_cache = os.sep.join([constants.EMBEDDINGS_PATH, embedding_type])
+    embedding_cache = constants.EMBEDDINGS_PATH
 
     if not os.path.exists(embedding_cache):
         os.makedirs(embedding_cache)
 
     directory = os.listdir(embedding_cache)
 
-    if len(directory) > 0 and any(".txt" in i for i in directory):
+    if len(directory) > 0 and any(".zip" in i for i in directory):
         logger.info(f'Directory Not Empty {embedding_cache}.')
         logger.info(f'Current files include: {directory}')
         logger.info(f'Skipping download. To force download, delete or rename files in this directory.')
 
-        write_pickle(directory, embedding_cache)
+        write_pickle(directory, embedding_cache, logger)
 
     else:
         # source: https://stackoverflow.com/questions/37573483/progress-bar-while-download-file-over-http-with-requests
@@ -46,6 +44,8 @@ def download_embeddings(embedding_alias, embedding_type, logger):
             directory = os.listdir(embedding_cache)
 
             write_pickle(directory, embedding_cache, logger)
+
+
 
     return True
 
