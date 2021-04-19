@@ -11,5 +11,7 @@ sidetable
 sparqlwrapper
 termplotlib
 torch
+torchtext
+pytorch-nlp
 wiki-dump-reader
 wordcloud
