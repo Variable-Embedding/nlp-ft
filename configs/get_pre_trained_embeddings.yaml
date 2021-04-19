@@ -1,0 +1,4 @@
+stages:
+- name: get_pre_trained_embeddings
+  embedding_type: glove.6B.100d
+

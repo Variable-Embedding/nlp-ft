@@ -1,16 +1,7 @@
 """Factory for stages.
 """
 from src.stages.pipeline import Pipeline
-from src.stages.stage_apply_dictionary import ApplyDictionaryStage
-from src.stages.stage_corpus_analysis import CorpusAnalysisStage
-from src.stages.stage_corpus_split import CorpusSplitStage
-from src.stages.stage_dictionary_creation import DictionaryCreationStage
-from src.stages.stage_pre_processing import PreProcessingStage
-from src.stages.stage_train_rnn_model import TrainRnnModelStage
-from src.stages.stage_rnn_training_comparison import RnnTrainingComparisonStage
-from src.stages.stage_wikipedia_scraping import WikipediaScrapingStage
-from src.stages.stage_wikipedia_text_cleaning import WikipediaTextCleaningStage
-from src.stages.stage_generate_text_rnn_model import GenerateTextRnnModelStage
+from src.stages.stage_get_pre_trained_embedding import GetPreTrainedEmbeddingsStage
 from src.util import constants
 
 from os.path import join
@@ -18,16 +9,7 @@ from os.path import join
 import yaml
 
 possible_stages = [
-    ApplyDictionaryStage,
-    CorpusAnalysisStage,
-    CorpusSplitStage,
-    DictionaryCreationStage,
-    GenerateTextRnnModelStage,
-    PreProcessingStage,
-    RnnTrainingComparisonStage,
-    TrainRnnModelStage,
-    WikipediaScrapingStage,
-    WikipediaTextCleaningStage,
+    GetPreTrainedEmbeddingsStage
 ]
 stage_name_mapping = {s.name: s for s in possible_stages}
 
