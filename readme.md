@@ -4,21 +4,11 @@ This is a natural language processing (NLP) pipeline built for research during [
 
 ## Overview
 
-NLP pipeline. Currently it supports these stages:
+NLP pipeline for Spring 2021.
 
-1. Scrape articles from Wikipedia.
-2. Cleans scraped text.
-3. Splits text into training / testing / validation files.
-4. Pre-process text file.
-5. Build a dictionary from a text file.
-6. Apply a dictionary to convert text file to a list of integer tokens.
-7. Train RNN model on the list of tokens.
+1. Get pre-trained GloVe embeddings.
 
 ## Getting Started
-
-1. There are currently two branches of interest in the respository. Before cloning, consider which set of code you are interested in.
-
-* The main branch ("master") comprises work related to MSAI 337 class deliverbale #1 and #2. Cloning this respository will default to the main branch.
 
 ```terminal
 git clone https://github.com/Variable-Embedding/nlp-ft
