@@ -227,7 +227,7 @@ def get_embedding_alias(embedding_type):
 
 
 class GetPreTrainedEmbeddingsStage(BaseStage):
-    """Stage for scraping the data from the wikipedia.
+    """Stage for retrieving pre-trained embeddings with torchtext api.
     """
     name = "get_pre_trained_embeddings"
     logger = logging.getLogger("pipeline").getChild("get_pre_trained_embeddings_stage")
@@ -259,5 +259,7 @@ class GetPreTrainedEmbeddingsStage(BaseStage):
                              f' pick from any of the following: {list(pretrained_aliases.keys())}')
         else:
             download_embeddings(embedding_alias, self.embedding_type, self.logger)
+
+        print(list(pretrained_aliases.keys()))
 
         return True

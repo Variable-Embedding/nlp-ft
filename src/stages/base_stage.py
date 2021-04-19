@@ -3,6 +3,7 @@
 import abc
 import logging
 
+
 class BaseStage(metaclass=abc.ABCMeta):
     """Base class for stage in the pipeline / workflow
     """

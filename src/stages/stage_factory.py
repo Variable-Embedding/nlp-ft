@@ -13,6 +13,7 @@ possible_stages = [
 ]
 stage_name_mapping = {s.name: s for s in possible_stages}
 
+
 def create_stage(stage_config):
     """A factory method for creating a stage.
 
@@ -29,6 +30,7 @@ def create_stage(stage_config):
     del stage_config["name"]
     return stage_name_mapping[stage_name](**stage_config)
 
+
 def create_pipeline(pipeline_config, topic="default"):
     """A factory method for creating a pipeline.
 
@@ -41,6 +43,7 @@ def create_pipeline(pipeline_config, topic="default"):
     stages = [create_stage(stage_config) for stage_config in pipeline_config["stages"]]
     del pipeline_config["stages"]
     return Pipeline(stages=stages, topic=topic, **pipeline_config)
+
 
 def create_pipeline_from_config(config_filename="pipeline_config.yaml", topic="default"):
     """A factory method for creating a pipeline from config file.
