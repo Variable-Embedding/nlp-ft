@@ -21,47 +21,35 @@ NLP pipeline. Currently it supports these stages:
 * The main branch ("master") comprises work related to MSAI 337 class deliverbale #1 and #2. Cloning this respository will default to the main branch.
 
 ```terminal
-git clone https://github.com/iryzhkov/nlp-pipeline
-```
-
-* The secondary branch ("nn_embedding") comprises work related to experiments with variable emebdding. To switch branches:
-
-```terminal
-git checkout nn_embedding
+git clone https://github.com/Variable-Embedding/nlp-ft
 ```
 
 2. After cloning, selecting a branch, and an IDLE of your choosing, from terminal, run the command make install to load all dependencies:
 
+* optional but recommended step: create a new anaconda environment.
+```terminal
+conda create -n nlp-ft
+conda activate nlp-ft
+```
+
+* run prep scripts
+```terminal
+make prep
+```
+
+* install dependencies
 ```terminal
 make install
 ```
 
-3. Alternatively you can run this project from Google Colab at the following URL [https://colab.research.google.com/drive/13EOfZHtKrgWWwHnF8rGUOewVtwND9Ns-?usp=sharing](https://colab.research.google.com/drive/13EOfZHtKrgWWwHnF8rGUOewVtwND9Ns-?usp=sharing). Running the COLAB notebook will clone the repository, install depenencides and run the experiement through your browser.
+3. Get and prep necessary data for nlp pipeline.
 
-## Executing pipeline / workflow
-
-Edit the pipeline config files to run the stages that you want, and run the following command:
-
+* Get pre-trained glove embeddings. By default, the get_pre_trained_embeddings.yaml file is set to the smallest embedding file for glove.6B.100d.
 ```terminal
-make run
+make get-glove
 ```
 
-To only scrap the wikipedia:
-
-```terminal
-make wikipedia-scraping
-```
-
-To run the RNN model:
-```
-make model-our-data
-```
-
-To clean the directory:
-
-```terminal
-make clean
-```
+* See [torchtext-glove](https://torchtext.readthedocs.io/en/latest/vocab.html) documents on pretrained_aliases for a full listing of available downloads.
 
 ## Logging
 
