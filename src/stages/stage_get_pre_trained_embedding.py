@@ -18,6 +18,7 @@ import numpy as np
 # TODO some embedding files are returned as .vec files, figure out how to parse them into a pickle format
 # issues with: charNgram, wiki.en.vec, wiki.simple.vec
 
+
 def download_embeddings(embedding_alias, embedding_type, logger):
     """Get and process GloVe embeddings.
 

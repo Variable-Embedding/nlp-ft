@@ -1,0 +1,7 @@
+stages:
+- name: benchmark2embeddings
+  embedding_type: glove.6B.100d
+  corpus_type: wikitext2
+
+
+
