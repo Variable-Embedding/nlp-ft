@@ -29,6 +29,7 @@ def get_benchmark(corpus_type, benchmark, logger):
         logger.info(f'Retrieving benchmark corpra for {corpus_type}')
         if isinstance(benchmark[corpus_type], list):
             for b in benchmark[corpus_type]:
+                logger.info(f'Getting {corpus_type}')
                 b()
                 # wait for a brief period to avoid server abuse
                 time.sleep(3)
@@ -50,8 +51,9 @@ def frozen_benchmarks():
     # language modeling tasks
     wikitext2 = partial(WikiText2, root=root)
     wikitext103 = partial(WikiText103, root=root)
-    # TODO: ptb test set does not zip to its own folder, move all text files to their own folder, if exists
-    penntreebank = partial(PennTreebank, root=root)
+    # ptb is special case, needs its own folder b/c it is not zipped data
+    ptb_root = os.sep.join([root, 'penntreebank'])
+    penntreebank = partial(PennTreebank, root=ptb_root)
     language_modeling_tasks = [wikitext2, wikitext103, penntreebank]
 
     # classification tasks

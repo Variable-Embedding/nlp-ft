@@ -1,6 +1,6 @@
 stages:
 - name: get_benchmark_corpra
-  corpus_type: classification_tasks
+  corpus_type: language_modeling_tasks
 
 
 ### list of possible options for embedding_type:
