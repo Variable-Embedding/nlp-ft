@@ -66,8 +66,10 @@ def frozen_benchmarks():
     yahoo_answers = partial(YahooAnswers, root=root)
     imdb = partial(IMDB, root=root)
     classification_tasks = [ag_news, amazon_review_polarity, amazon_review_full, db_pedia, yelp_review_polarity, yelp_review_full, yahoo_answers, imdb]
+    all_benchmarks = language_modeling_tasks + classification_tasks
 
-    benchmark = {"language_modeling_tasks": language_modeling_tasks,
+    benchmark = {"everything": all_benchmarks,
+                 "language_modeling_tasks": language_modeling_tasks,
                  "classification_tasks": classification_tasks,
                  "wikitext2": wikitext2,
                  "wikitext103": wikitext103,
@@ -95,7 +97,7 @@ class GetBenchmarkCorpra(BaseStage):
         """
         super().__init__(parent)
 
-        self.corpus_type = 'wikitext2' if corpus_type is None else corpus_type
+        self.corpus_type = 'everything' if corpus_type is None else corpus_type
 
     def pre_run(self):
         """The function that is executed before the stage is run.

@@ -35,9 +35,18 @@ make install
 3. Get and prep necessary data for nlp pipeline.
 
 * Get pre-trained glove embeddings. By default, the get_pre_trained_embeddings.yaml file is set to the smallest embedding file for glove.6B.100d.
+_Note_: Currently, glove.6B.100d, will download entire zip file for glove.6B which includes 50d, 100d, 200d, and 300d versions.
 ```terminal
-make get-glove
+make embeddings
 ```
+* Get benchmark corpra via the torchtext api such as wikitext 2 and imdb datasets. Provide the name of a corpus such as "imdb", specify a task such as "language_modeling", or get "everything".
+_Note_: By default, make benchmark will get everything that is currently available in this script. 
+```terminal
+make benchmark
+```
+
+
+
 
 * See [torchtext-glove](https://torchtext.readthedocs.io/en/latest/vocab.html) documents on pretrained_aliases for a full listing of available downloads.
 

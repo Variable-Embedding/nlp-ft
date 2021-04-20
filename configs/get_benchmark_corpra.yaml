@@ -1,6 +1,6 @@
 stages:
 - name: get_benchmark_corpra
-  corpus_type: language_modeling_tasks
+  corpus_type: everything
 
 
 ### list of possible options for embedding_type:
@@ -13,3 +13,4 @@ stages:
 # 'yelp_review_polarity', 'yelp_review_full',
 # 'yahoo_answers',
 # 'imdb'
+# 'everything' -> downloads everything available
