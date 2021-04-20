@@ -93,6 +93,7 @@ class Benchmark2Embeddings(BaseStage):
         super().__init__(parent)
         self.embedding_type = 'glove.6B.100d' if embedding_type is None else embedding_type
         self.corpus_type = 'wikitext2' if corpus_type is None else corpus_type
+        self.vocab = None
 
     def pre_run(self):
         """The function that is executed before the stage is run.
@@ -108,7 +109,7 @@ class Benchmark2Embeddings(BaseStage):
         """
         vectors_cache = embedding_cache(self.embedding_type, self.logger)
         corpra_cache = corpra_caches(self.corpus_type, self.logger)
-
-        vocab = make_corpra_vocab(corpra_cache=corpra_cache, vectors_cache=vectors_cache, logger=self.logger)
+        # TODO: pass this vocab object into training pipeline and model params
+        self.vocab = make_corpra_vocab(corpra_cache=corpra_cache, vectors_cache=vectors_cache, logger=self.logger)
 
         return True
