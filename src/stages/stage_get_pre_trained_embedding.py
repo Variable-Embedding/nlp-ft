@@ -14,11 +14,17 @@ from torchtext.vocab import pretrained_aliases
 
 import logging
 import numpy as np
-import requests
 
+# TODO some embedding files are returned as .vec files, figure out how to parse them into a pickle format
+# issues with: charNgram, wiki.en.vec, wiki.simple.vec
 
 def download_embeddings(embedding_alias, embedding_type, logger):
     """Get and process GloVe embeddings.
+
+    :param embedding_alias: a partial function, the partial torchtext function to get a pre-trained embedding.
+    :param embedding_type: a string, the name of the target embeddig type
+    :param logger: the logging object for this process.
+    :return: True if function completes
     """
 
     embedding_cache = constants.EMBEDDINGS_PATH
@@ -28,30 +34,20 @@ def download_embeddings(embedding_alias, embedding_type, logger):
 
     directory = os.listdir(embedding_cache)
 
-    if len(directory) > 0 and any(".zip" in i for i in directory):
-        logger.info(f'Directory Not Empty {embedding_cache}.')
-        logger.info(f'Current files include: {directory}')
-        logger.info(f'Skipping download. To force download, delete or rename files in this directory.')
-
-        write_pickle(directory, embedding_cache, logger)
-
+    if any(i.startswith(f'{embedding_type}.zip') for i in directory):
+        logger.info(f'Embedding data for {embedding_type} appears to exist already, skipping download.')
     else:
-        # source: https://stackoverflow.com/questions/37573483/progress-bar-while-download-file-over-http-with-requests
-        if not any(".zip" in i for i in directory):
-            logger.info(f'Downloading embedding data for {embedding_type} to {embedding_cache}')
-            embedding_alias(cache=embedding_cache)
+        logger.info(f'Downloading embedding data for {embedding_type} to {embedding_cache}')
+        embedding_alias(cache=embedding_cache)
 
-            directory = os.listdir(embedding_cache)
-
-            write_pickle(directory, embedding_cache, logger)
-
-
+    directory = [file for file in os.listdir(embedding_cache) if file.startswith(embedding_type)]
+    write_pickle(directory, embedding_cache, logger)
 
     return True
 
 
 def write_pickle(directory, unzip_path, logger):
-    """Write dictionaries to pickled files if the provided directory does not already have pickle files.
+    """A helper function to write dictionaries to pickled files if the provided directory does not already have pickle files.
 
     :param directory: A dictionary of word embeddings.
     :param unzip_path: Full path to file locations.
@@ -89,7 +85,7 @@ def write_pickle(directory, unzip_path, logger):
 
 
 def parse_embedding_pickle(embedding_file_path, logger):
-    """Read pickled embedding files from disk.
+    """A helper function to read pickled embedding files from disk.
 
     :param embedding_file_path: string, full path to the embedding txt file
     :param logger: the logging object for this process.
@@ -112,7 +108,7 @@ def parse_embedding_pickle(embedding_file_path, logger):
 
 
 def parse_embedding_txt(embedding_file_path, logger):
-    """Read text embedding files from disk.
+    """A helper function to read text embedding files from disk.
 
     :param embedding_file_path: string, full path to the embedding txt file
     :param logger: the logging object for this process.
@@ -135,7 +131,7 @@ def parse_embedding_txt(embedding_file_path, logger):
 
 
 def get_num_lines(file_path):
-    """A helper function to count number of lines in a given text file.
+    """A helper function to count number of lines in a given text file for progress bar.
 
     :param file_path: full path to some .txt file.
     :return: integer, count of lines in a .txt file.
@@ -152,7 +148,7 @@ def get_num_lines(file_path):
 
 
 def read_line(line, embedding_dim):
-    """Read lines in a text file from embeddings.
+    """A helper function to read lines in a text file from embeddings.
 
     :param line: Each line of a text open object.
     :param embedding_dim: the expected vector dimension
@@ -170,8 +166,9 @@ def read_line(line, embedding_dim):
         vector = np.asarray(values[rest:], "float32")
 
     except ValueError:
-        #TODO: words such as ... or -0.0033421 are truncating the vector space from 300 to less than 300,
+        # TODO: words such as ... or -0.0033421 are truncating the vector space from oringal dim to less than dim space
         # impacting about a dozen entries, provide random vector for now, fix later
+        # example: if original dim is 200, some dims turn out to be 199
         word, rest = return_repeating_word(values)
         vector = random_embedding_vector(embedding_dim=embedding_dim)
 
@@ -182,9 +179,7 @@ def read_line(line, embedding_dim):
 
 
 def return_repeating_word(values):
-    """A helper function for read_line().
-
-    Address issues where word has repeating chargers, return them as a single word.
+    """A helper function to address issues where word has repeating chargers, return them as a single word.
 
     :param values: values, a line of embedding text data
     :return: A string of repeating characters.
@@ -219,11 +214,30 @@ def random_embedding_vector(embedding_dim, scale=0.6):
 
 
 def get_embedding_alias(embedding_type):
+    """A helper function to return a torchtext partial function to download pre-trained embeddings.
+
+    :param embedding_type: a string, representation of a type of pre-trained embeddings. Must be in pretrained_aliases.keys() or start with a key.
+    :return: if found, the partial function to download the embedding, false if not found.
+    """
     embedding_aliases = pretrained_aliases.keys()
     if embedding_type in embedding_aliases:
         return pretrained_aliases[embedding_type]
+    elif any(key.startswith(embedding_type) for key in pretrained_aliases.keys()):
+        for alias in pretrained_aliases.keys():
+            if alias.startswith(embedding_type):
+                embedding_type = alias
+                return pretrained_aliases[embedding_type]
     else:
         return False
+
+
+def all_embeddings():
+    """A helper function to return list of embedding names.
+
+    :return: everything, A list of strings, of known pre-trained embedding names for retrieval with torchtext api.
+    """
+    everything = ["glove.6B", "glove.42B", "glove.840B", "glove.twitter", "fasttext.en", "fasttext.simple", "charngram"]
+    return everything
 
 
 class GetPreTrainedEmbeddingsStage(BaseStage):
@@ -234,9 +248,15 @@ class GetPreTrainedEmbeddingsStage(BaseStage):
 
     def __init__(self, parent=None, embedding_type=None):
         """Initialization for Get Pre-Trained Embedding Stage.
+        :param embedding_type: a string, representation of the desired embedding type. Default to "everything".
+
+        list of possible options for embedding_type:
+        glove.6B, glove.42B, glove.840B, glove.twitter, fasttext.en, fasttext.simple, charngram
+        or "everything" to get them all
+
         """
         super().__init__(parent)
-        self.embedding_type = 'glove.6B.100d' if embedding_type is None else embedding_type
+        self.embedding_type = 'glove.6B' if embedding_type is None else embedding_type
 
     def pre_run(self):
         """The function that is executed before the stage is run.
@@ -248,18 +268,23 @@ class GetPreTrainedEmbeddingsStage(BaseStage):
     def run(self):
         """Retrieves pre-trained embeddings from various sources.
 
-        Returns:
-            True if the stage execution succeded, False otherwise.
+        :return: True if the stage execution succeded, False otherwise.
         """
         embedding_alias = get_embedding_alias(self.embedding_type)
 
-        if embedding_alias is False:
+        if self.embedding_type == "everything":
+            self.logger.info('Getting all types of pre-trained embeddings, this will take a while.')
+            for i in all_embeddings():
+                embedding_alias = get_embedding_alias(i)
+                download_embeddings(embedding_alias, i, self.logger)
+                # force a short wait in between retrievals
+                time.sleep(3)
+
+        elif embedding_alias is False:
             self.logger.info(f'Provided embedding type of '
                              f'"{self.embedding_type}" not found,'
                              f' pick from any of the following: {list(pretrained_aliases.keys())}')
         else:
             download_embeddings(embedding_alias, self.embedding_type, self.logger)
-
-        print(list(pretrained_aliases.keys()))
 
         return True

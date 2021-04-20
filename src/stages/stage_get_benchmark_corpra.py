@@ -24,6 +24,12 @@ from torchtext.datasets.imdb import IMDB
 
 
 def get_benchmark(corpus_type, benchmark, logger):
+    """A helper function to download benchmark corpra with torchtext api.
+
+    :param corpus_type: a string, representing the target corpus
+    :param benchmark: a dictionary of torchtext partial functions for downloading corpra, keyed by string
+    :param logger: the logging object.
+    """
 
     if any([corpus_type in i for i in benchmark.keys()]):
         logger.info(f'Retrieving benchmark corpra for {corpus_type}')
@@ -41,12 +47,19 @@ def get_benchmark(corpus_type, benchmark, logger):
 
 
 def check_data_folder_path():
+    """A helper function to check for a directory and make it if not exists.
+    :return: an os path object for the current path
+    """
+
     if not os.path.exists(constants.DATA_PATH):
         os.makedirs(constants.DATA_PATH)
     return constants.DATA_PATH
 
 
 def frozen_benchmarks():
+    """A helper function to freeze available torchtext api functions for getting benchmarks
+    :return: benchmark, a dictionary of torchtext functions, keyed by a simple name.
+    """
     root = check_data_folder_path()
     # language modeling tasks
     wikitext2 = partial(WikiText2, root=root)
@@ -94,6 +107,21 @@ class GetBenchmarkCorpra(BaseStage):
 
     def __init__(self, parent=None, corpus_type=None):
         """Initialization for Get Benchmark Corpra Stage.
+        :param corpus_type: a string, representation of the target corpus type or modeling task. Default to "everything".
+
+        list of possible options for corpus_type:
+
+        'language_modeling_tasks' -> downloads three corpra,
+        'classification_tasks' -> downloads eight corpra,
+        'wikitext2', 'wikitext103', 'penntreebank',
+        'ag_news',
+        'amazon_review_polarity', 'amazon_review_full',
+        'db_pedia'
+        'yelp_review_polarity', 'yelp_review_full',
+        'yahoo_answers',
+        'imdb',
+        'everything' -> downloads everything available
+
         """
         super().__init__(parent)
 
@@ -109,8 +137,7 @@ class GetBenchmarkCorpra(BaseStage):
     def run(self):
         """Retrieves benchmark texts with torchtext api.
 
-        Returns:
-            True if the stage execution succeeded, False otherwise.
+        :return: True if the stage execution succeeded, False otherwise.
         """
         benchmark = frozen_benchmarks()
         get_benchmark(corpus_type=self.corpus_type, benchmark=benchmark, logger=self.logger)

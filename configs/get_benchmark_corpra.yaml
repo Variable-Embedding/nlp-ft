@@ -2,15 +2,3 @@ stages:
 - name: get_benchmark_corpra
   corpus_type: everything
 
-
-### list of possible options for embedding_type:
-# 'language_modeling_tasks' -> downloads three corpra
-# 'classification_tasks' -> downloads eight corpra
-# 'wikitext2', 'wikitext103', 'penntreebank'
-# 'ag_news',
-# 'amazon_review_polarity', 'amazon_review_full',
-# 'db_pedia'
-# 'yelp_review_polarity', 'yelp_review_full',
-# 'yahoo_answers',
-# 'imdb'
-# 'everything' -> downloads everything available
