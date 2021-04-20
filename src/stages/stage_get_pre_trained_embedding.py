@@ -42,7 +42,9 @@ def download_embeddings(embedding_alias, embedding_type, logger):
         embedding_alias(cache=embedding_cache)
 
     directory = [file for file in os.listdir(embedding_cache) if file.startswith(embedding_type)]
-    write_pickle(directory, embedding_cache, logger)
+    # pickling the vectors saves on I/O but there is a bug in transformation
+    # FIXME: correctly transform txt files to pickles files.
+    # write_pickle(directory, embedding_cache, logger)
 
     return True
 

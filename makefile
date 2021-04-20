@@ -13,6 +13,9 @@ embeddings:
 benchmark:
 	$(PYTHON) main.py --config-file get_benchmark_corpra.yaml
 
+benchmark2embeddings:
+	$(PYTHON) main.py --config-file benchmark2embeddings.yaml
+
 clean:
 	find . -type f -name \*.pyc -exec rm {} \;
 	rm -rf dist *.egg-info .coverage .DS_Store logs tmp apicache-py3 *.lwp *.ctrl
