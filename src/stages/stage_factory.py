@@ -2,6 +2,7 @@
 """
 from src.stages.pipeline import Pipeline
 from src.stages.stage_get_pre_trained_embedding import GetPreTrainedEmbeddingsStage
+from src.stages.stage_get_benchmark_corpra import GetBenchmarkCorpra
 from src.util import constants
 
 from os.path import join
@@ -9,7 +10,8 @@ from os.path import join
 import yaml
 
 possible_stages = [
-    GetPreTrainedEmbeddingsStage
+    GetPreTrainedEmbeddingsStage,
+    GetBenchmarkCorpra
 ]
 stage_name_mapping = {s.name: s for s in possible_stages}
 

@@ -1,8 +1,11 @@
 PYTHON = python3
 PIP = pip3
 
-get-glove:
+embeddings:
 	$(PYTHON) main.py --config-file get_pre_trained_embeddings.yaml
+
+benchmark:
+	$(PYTHON) main.py --config-file get_benchmark_corpra.yaml
 
 prep:
 	mkdir -p logs tmp data
