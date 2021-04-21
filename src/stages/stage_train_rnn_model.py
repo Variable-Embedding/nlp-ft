@@ -56,6 +56,7 @@ class TrainRnnModelStage(BaseStage):
         self.valid_file = corpra['valid'] if corpra else valid_file
         self.dictionary = data.vocab.stoi if data else dictionary
         self.vectors = data.vocab.vectors
+        self.corpus_type = corpus_type
 
         self.model_config_filepath = join(constants.CONFIG_PATH, model_config_file)
         self.training_config_filepath = join(constants.CONFIG_PATH, training_config_file)
@@ -114,13 +115,13 @@ class TrainRnnModelStage(BaseStage):
                                                      **training_config)
             self.logger.info("Finished model training.")
             self.logger.info("Saving the model...")
-            file_path = join(constants.DATA_PATH, "{}.{}.model.pkl".format(self.parent.topic,
+            file_path = join(constants.DATA_PATH, "{}.{}.model.pkl".format(self.corpus_type,
                                                                            lstm_config))
             torch.save(model, file_path)
 
             self.logger.info("Saving training and validation losses to csv...")
             train_valid_losses = np.column_stack((train_losses, valid_losses[1:]))
-            file_path = join(constants.DATA_PATH, "{}.{}.losses.csv".format(self.parent.topic,
+            file_path = join(constants.DATA_PATH, "{}.{}.losses.csv".format(self.corpus_type,
                                                                             lstm_config))
             np.savetxt(file_path, train_valid_losses, delimiter=", ", header="train, valid")
 
@@ -135,7 +136,7 @@ class TrainRnnModelStage(BaseStage):
             plt.ylabel("perplexity")
             plt.yscale("log")
             plt.legend()
-            plt.savefig(join(constants.DATA_PATH, "{}.{}.preplexity.png".format(self.parent.topic,
+            plt.savefig(join(constants.DATA_PATH, "{}.{}.preplexity.png".format(self.corpus_type,
                                                                                 lstm_config)))
         return True
 
