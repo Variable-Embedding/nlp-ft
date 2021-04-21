@@ -47,8 +47,10 @@ _Note_: By default, make benchmark will get everything that is currently availab
 make benchmark
 ```
 
-
-
+4. Run the model pipeline. 
+```terminal
+make model
+```
 
 * See [torchtext-glove](https://torchtext.readthedocs.io/en/latest/vocab.html) documents on pretrained_aliases for a full listing of available downloads.
 
