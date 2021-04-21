@@ -153,8 +153,9 @@ def train_model(model
                     with torch.no_grad():
                         norm = nn.utils.clip_grad_norm_(model.parameters(), model.max_norm)
                         for param in model.parameters():
-                            lr = learning_rate * (learning_rate_decay ** epoch)
-                            param -= lr * param.grad
+                            if param.grad != None:
+                                lr = learning_rate * (learning_rate_decay ** epoch)
+                                param -= lr * param.grad
 
             training_losses.append(np.exp(np.mean(t_losses)))
             if not valid_tokens is None:
@@ -334,9 +335,7 @@ class Model(nn.Module):
                  , sequence_step_size=None
                  , lstm_configuration="default"
                  , embedding_vectors=None
-                 , embedding_trainable=True
-                 , learning_rate=1
-                 , learning_rate_decay=0.8
+                 , embedding_trainable=False
                  ):
         """Initialization for the model.
 

@@ -1,6 +1,4 @@
 batch_size: 128
-learning_rate: 1
-learning_rate_decay: 0.8
 max_init_param: 0.05
 max_norm: 5
 number_of_layers: 2
