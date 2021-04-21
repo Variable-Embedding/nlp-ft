@@ -1,6 +1,8 @@
 """Stage for comparing different rnn trainings.
 """
-from src.model.rnn_model import train_model, test_model, Model, complete_sequence
+
+from src.model.model_base import Model
+from src.model.model_tools import train_model, test_model
 from src.stages.base_stage import BaseStage
 from src.util import constants
 from src.util.dictionary import dictionary_file_path
