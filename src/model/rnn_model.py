@@ -122,6 +122,7 @@ def train_model(model
     if not logger is None:
         num_parameters = sum([np.prod(p.size()) for p in model.parameters()])
         logger.info("Number of model parameters: {}".format(num_parameters))
+        logger.info(f"Training with hardware: {model.device}")
 
     if not valid_tokens is None:
         validataion_loss = test_model(model, valid_tokens)
@@ -148,12 +149,12 @@ def train_model(model
                     loss = loss_function(output, target)
                     t_losses.append(loss.item() / model.batch_size)
                     loss.backward()
-                    ## FIXME: missing params in model resulting in none type error
-                    # with torch.no_grad():
-                    #     norm = nn.utils.clip_grad_norm_(model.parameters(), model.max_norm)
-                    #     for param in model.parameters():
-                    #         lr = learning_rate * (learning_rate_decay ** epoch)
-                    #         param -= lr * param.grad
+                    # FIXME: If trainable embedding is false, skip it here
+                    with torch.no_grad():
+                        norm = nn.utils.clip_grad_norm_(model.parameters(), model.max_norm)
+                        for param in model.parameters():
+                            lr = learning_rate * (learning_rate_decay ** epoch)
+                            param -= lr * param.grad
 
             training_losses.append(np.exp(np.mean(t_losses)))
             if not valid_tokens is None:
@@ -329,11 +330,11 @@ class Model(nn.Module):
                  , sequence_length=30
                  , max_norm=2
                  , max_init_param=0.01
-                 , device="cpu"
+                 , device="gpu"
                  , sequence_step_size=None
                  , lstm_configuration="default"
                  , embedding_vectors=None
-                 , embedding_trainable=False
+                 , embedding_trainable=True
                  , learning_rate=1
                  , learning_rate_decay=0.8
                  ):
