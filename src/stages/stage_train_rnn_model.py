@@ -143,6 +143,12 @@ class TrainRnnModelStage(BaseStage):
 
 def make_benchmark_corpra(cache_paths, vocab, tokenizer):
     """Leveraging torchtext functions.
+    Args:
+        cache_paths: a list of os paths to locations of text
+        vocab: a torchtext vocab object
+        tokenizer: a torchtext tokenizer object
+    Returns:
+        corpus: a dictionary of corpra keyed by 'train', 'valid', and 'test' stages
     """
 
     logging.info('Starting make_torch_corpra()')

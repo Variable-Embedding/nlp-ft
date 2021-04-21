@@ -382,10 +382,10 @@ class Model(nn.Module):
 
         self.dropout = nn.Dropout(dropout_probability)
 
-        # Set initial weights.
+        # set initial weights randomly
         for param in self.parameters():
             nn.init.uniform_(param, -max_init_param, max_init_param)
-
+        # set initial weights from pre-trained vectors
         if embedding_vectors is not None:
             self.embedding = prep_embedding_layer(vectors=embedding_vectors, trainable=embedding_trainable)
 

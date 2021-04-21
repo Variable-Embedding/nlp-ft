@@ -20,6 +20,19 @@ import random
 
 
 def make_corpra_vocab(corpra_cache, logger, tokenizer, vectors_cache=None, min_freq=None):
+    """A helper function to create torchtext vocab objects from benchmark texts.
+    Combines pre-trained embedding vectors with torch objects.
+
+    Args:
+        corpra_cache: a list of os paths to corpra
+        logger: a logging object
+        tokenizer: a torchtext tokenizer object
+        vectors_cache: an os path to the pre-trained embedding
+        min_freq: an integer such as 1 or 5, If none, value is 1.
+
+    Returns: v, a torchtext objecting having global vocabulary, lookup tables, and embedding layers
+
+    """
     counter = Counter()
     min_freq = 1 if min_freq is None else min_freq
 
@@ -48,6 +61,16 @@ def make_corpra_vocab(corpra_cache, logger, tokenizer, vectors_cache=None, min_f
 
 
 def corpra_caches(corpus_type, logger):
+    """A helper function to return a series of os paths to text caches
+
+    Args:
+        corpus_type: the name of a benchmark corpus -> like "wikitext2" or "imdb"
+        logger: a logging object
+
+    Returns: cache_paths, a list of os paths to benchmark text corpra on disk.
+
+    """
+
     corpus_type = 'wikitext-2' if "wikitext2" == corpus_type else "wikitext-103" if "wikitext103" == corpus_type else corpus_type
     cache_path = os.sep.join([constants.DATA_PATH, corpus_type])
 
@@ -66,6 +89,15 @@ def corpra_caches(corpus_type, logger):
 
 
 def embedding_cache(embedding_type, logger):
+    """A helper function to return an os path to a specified cache location.
+
+    Args:
+        embedding_type: a string, the name of the target embedding type -> like "glove.6B"
+        logger: a logging object
+
+    Returns: an os path string
+
+    """
     cache_path = os.sep.join([constants.EMBEDDINGS_PATH, f'{embedding_type}.txt'])
     if os.path.exists(cache_path):
         logger.info(f"Found embedding cache at {cache_path}.")
@@ -73,6 +105,16 @@ def embedding_cache(embedding_type, logger):
 
 
 def read_pickle(cache_path, logger):
+    """A helper function to read pickled data from disk.
+
+    Args:
+        cache_path: an os path to a pickle file to be opened.
+        logger: a logging object
+
+    Returns: a pickled file object
+
+    """
+
     logger.info(f'Opening file at {cache_path}. This may take a while')
 
     with open(cache_path, "rb") as handle:
