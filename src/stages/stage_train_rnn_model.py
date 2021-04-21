@@ -1,6 +1,8 @@
 """Stage for pre-processing text.
 """
 from src.stages.stage_benchmark2embeddings import Benchmark2Embeddings
+from src.stages.stage_get_pre_trained_embedding import GetPreTrainedEmbeddingsStage
+from src.stages.stage_get_benchmark_corpra import GetBenchmarkCorpra
 from src.model.rnn_model import train_model, test_model, Model
 from src.stages.base_stage import BaseStage
 from src.util import constants
@@ -40,6 +42,10 @@ class TrainRnnModelStage(BaseStage):
         """
         super(TrainRnnModelStage, self).__init__(parent)
 
+        benchmark = GetBenchmarkCorpra(corpus_type=corpus_type)
+        benchmark.run()
+        pre_trained_embedding = GetPreTrainedEmbeddingsStage(embedding_type=embedding_type)
+        pre_trained_embedding.run()
         data = Benchmark2Embeddings(embedding_type=embedding_type, corpus_type=corpus_type)
         data.run()
 
