@@ -95,4 +95,7 @@ class Model(nn.Module):
         elif self.model_type == 'ft':
             # TODO: FT class
             X = self.model_module(X)
+            # some kind of linear thing here
+            # some kind of ReLu activation stuff here
+            # return some output and states here
 
