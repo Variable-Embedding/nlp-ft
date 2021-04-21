@@ -5,7 +5,7 @@ import torch.nn as nn
 
 from src.model.model_tools import prep_embedding_layer
 from src.model.model_lstm import LSTM
-
+from src.model.model_ft import FT
 
 class Model(nn.Module):
     def __init__(self
@@ -22,7 +22,7 @@ class Model(nn.Module):
                  , lstm_configuration="default"
                  , embedding_vectors=None
                  , embedding_trainable=True
-                 , model_type='lstm'
+                 , model_type=None
                  ):
         """Initialization for the model.
 
@@ -47,6 +47,7 @@ class Model(nn.Module):
         self.sequence_length = sequence_length
         self.max_norm = max_norm
         self.max_init_param = max_init_param
+        self.model_type = model_type
 
         if sequence_step_size is None:
             self.sequence_step_size = sequence_length
@@ -61,11 +62,17 @@ class Model(nn.Module):
         # Set up the architecture.
         self.embedding = nn.Embedding(dictionary_size, embedding_size)
 
-        self.lstm = LSTM(self.embedding_size
-                         , number_of_layers
-                         , dropout_probability
-                         , lstm_configuration
-                         )
+        if model_type == 'lstm':
+            self.model_model = LSTM(self.embedding_size
+                                   , number_of_layers
+                                   , dropout_probability
+                                   , lstm_configuration)
+
+        elif model_type == 'ft':
+            self.model_model = None
+
+        else:
+            self.model_model = None
 
         self.dropout = nn.Dropout(dropout_probability)
 
@@ -78,8 +85,9 @@ class Model(nn.Module):
 
     def forward(self, X, states=None):
         X = self.embedding(X)
-        X = self.dropout(X)
-        X, states = self.lstm(X, states)
-        X = self.dropout(X)
-        output = torch.tensordot(X, self.embedding.weight, dims=([2], [1]))
-        return output, states
+
+        if self.model_type == 'lstm':
+            X = self.dropout(X)
+            X, states = self.model_model(X, states)
+            output = torch.tensordot(X, self.embedding.weight, dims=([2], [1]))
+            return output, states
