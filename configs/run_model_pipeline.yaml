@@ -4,4 +4,18 @@ stages:
   embedding_type: glove.6B.100d
   training_config_file: rnn_training_config.yaml
   model_config_file: rnn_model_config.yaml
+  lstm_configs:
+    - default
+    - att-emb
+    - res-att-emb
+    - ff-emb
+    - res-ff-emb
+- name: rnn_training_comparison
+  lstm_configs:
+    - default
+    - att-emb
+    - res-att-emb
+    - ff-emb
+    - res-ff-emb
+
 
