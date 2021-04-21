@@ -52,6 +52,24 @@ make benchmark
 make model
 ```
 
+5. Optional: Setup and configure pypy3 for super fast code. 
+* Create a new virtual environment or conda environment, then activate it. 
+* For MacOS users, brew install pypy3
+```terminal
+brew install pypy3
+```
+* Configure pypy3 and install dependencies:
+```terminal
+make install-pypy
+```
+* Run model with pypy3:
+```terminal
+make model-pypy
+```
+* For help on pypy3 and brew, see [pypy3 docs](https://doc.pypy.org/en/latest/install.html) and [brew formula](https://formulae.brew.sh/formula/pypy3).
+
+
+
 * See [torchtext-glove](https://torchtext.readthedocs.io/en/latest/vocab.html) documents on pretrained_aliases for a full listing of available downloads.
 
 ## Logging
