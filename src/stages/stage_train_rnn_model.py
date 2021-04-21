@@ -3,7 +3,8 @@
 from src.stages.stage_benchmark2embeddings import Benchmark2Embeddings
 from src.stages.stage_get_pre_trained_embedding import GetPreTrainedEmbeddingsStage
 from src.stages.stage_get_benchmark_corpra import GetBenchmarkCorpra
-from src.model.rnn_model import train_model, test_model, Model
+from src.model.model_base import Model
+from src.model.model_tools import train_model, test_model
 from src.stages.base_stage import BaseStage
 from src.util import constants
 from src.util.dictionary import dictionary_file_path
