@@ -63,16 +63,17 @@ class Model(nn.Module):
         self.embedding = nn.Embedding(dictionary_size, embedding_size)
 
         if model_type == 'lstm':
-            self.model_model = LSTM(self.embedding_size
+            self.model_module = LSTM(self.embedding_size
                                    , number_of_layers
                                    , dropout_probability
                                    , lstm_configuration)
 
         elif model_type == 'ft':
-            self.model_model = None
+            # TODO: FT class
+            self.model_module = FT()
 
         else:
-            self.model_model = None
+            self.model_module = None
 
         self.dropout = nn.Dropout(dropout_probability)
 
@@ -88,6 +89,10 @@ class Model(nn.Module):
 
         if self.model_type == 'lstm':
             X = self.dropout(X)
-            X, states = self.model_model(X, states)
+            X, states = self.model_module(X, states)
             output = torch.tensordot(X, self.embedding.weight, dims=([2], [1]))
             return output, states
+        elif self.model_type == 'ft':
+            # TODO: FT class
+            X = self.model_module(X)
+
