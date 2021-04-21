@@ -16,6 +16,9 @@ benchmark:
 benchmark2embeddings:
 	$(PYTHON) main.py --config-file benchmark2embeddings.yaml
 
+model:
+	$(PYTHON) main.py --config-file run_model_pipeline.yaml
+
 clean:
 	find . -type f -name \*.pyc -exec rm {} \;
 	rm -rf dist *.egg-info .coverage .DS_Store logs tmp apicache-py3 *.lwp *.ctrl

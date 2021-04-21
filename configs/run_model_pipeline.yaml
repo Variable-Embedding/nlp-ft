@@ -1,0 +1,14 @@
+stages:
+
+- name: get_pre_trained_embeddings
+  embedding_type: glove.6B
+
+- name: get_benchmark_corpra
+  corpus_type: wikitext2
+
+- name: train_rnn_model
+  corpus_type: wikitext2
+  embedding_type: glove.6B.100d
+  training_config_file: rnn_training_config.yaml
+  model_config_file: rnn_model_config.yaml
+

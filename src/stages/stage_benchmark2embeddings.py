@@ -19,15 +19,15 @@ from torchtext.data.utils import get_tokenizer
 import random
 
 
-def make_corpra_vocab(corpra_cache, logger, vectors_cache=None, min_freq=None, torch_tokenizer='basic_english'):
+def make_corpra_vocab(corpra_cache, logger, tokenizer, vectors_cache=None, min_freq=None):
     counter = Counter()
-    tokenizer = get_tokenizer(torch_tokenizer)
     min_freq = 1 if min_freq is None else min_freq
 
     vectors = Vectors(vectors_cache)
 
     for corpus_cache in corpra_cache:
         logger.info(f'Reading corpus cache from {corpus_cache}')
+
         f = open(corpus_cache, 'r')
 
         for line in f:
@@ -87,13 +87,15 @@ class Benchmark2Embeddings(BaseStage):
     name = "benchmark2embeddings"
     logger = logging.getLogger("pipeline").getChild("benchmark2embeddings_stage")
 
-    def __init__(self, parent=None, embedding_type=None, corpus_type=None):
+    def __init__(self, parent=None, embedding_type=None, corpus_type=None, tokenizer=None):
         """Initialization for Benchmark 2 Embeddings Stage.
         """
         super().__init__(parent)
         self.embedding_type = 'glove.6B.100d' if embedding_type is None else embedding_type
         self.corpus_type = 'wikitext2' if corpus_type is None else corpus_type
         self.vocab = None
+        self.corpra_cache = None
+        self.tokenizer = get_tokenizer('basic_english') if tokenizer is None else tokenizer
 
     def pre_run(self):
         """The function that is executed before the stage is run.
@@ -108,8 +110,10 @@ class Benchmark2Embeddings(BaseStage):
         :return: True if the stage execution succeeded, False otherwise.
         """
         vectors_cache = embedding_cache(self.embedding_type, self.logger)
-        corpra_cache = corpra_caches(self.corpus_type, self.logger)
-        # TODO: pass this vocab object into training pipeline and model params
-        self.vocab = make_corpra_vocab(corpra_cache=corpra_cache, vectors_cache=vectors_cache, logger=self.logger)
+        self.corpra_cache = corpra_caches(self.corpus_type, self.logger)
+        self.vocab = make_corpra_vocab(corpra_cache=self.corpra_cache
+                                       , vectors_cache=vectors_cache
+                                       , logger=self.logger
+                                       , tokenizer=self.tokenizer)
 
         return True

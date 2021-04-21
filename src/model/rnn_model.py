@@ -60,7 +60,8 @@ def batch_data(tokens, model, batch_size=None, sequence_length=None, sequence_st
     if sequence_step_size is None:
         sequence_step_size = model.sequence_step_size
 
-    data = torch.tensor(tokens, dtype=torch.int64)
+    # data = torch.tensor(tokens, dtype=torch.int64)
+    data = tokens
     words_per_batch = data.size(0) // batch_size
     data = data[:words_per_batch * batch_size]
     data = data.view(batch_size, -1)
@@ -89,8 +90,15 @@ def loss_function(output, target):
     """
     return F.cross_entropy(output.reshape(-1, output.size(2)), target.reshape(-1)) * target.size(1)
 
-def train_model(model, train_tokens, valid_tokens=None, number_of_epochs=1,
-                learning_rate=1, learning_rate_decay=1, logger=None):
+
+def train_model(model
+                , train_tokens
+                , valid_tokens=None
+                , number_of_epochs=1
+                , learning_rate=1
+                , learning_rate_decay=1
+                , logger=None
+                ):
     """Train the model in the train data.
 
     Args:
@@ -140,11 +148,12 @@ def train_model(model, train_tokens, valid_tokens=None, number_of_epochs=1,
                     loss = loss_function(output, target)
                     t_losses.append(loss.item() / model.batch_size)
                     loss.backward()
-                    with torch.no_grad():
-                        norm = nn.utils.clip_grad_norm_(model.parameters(), model.max_norm)
-                        for param in model.parameters():
-                            lr = learning_rate * (learning_rate_decay ** epoch)
-                            param -= lr * param.grad
+                    ## FIXME: missing params in model resulting in none type error
+                    # with torch.no_grad():
+                    #     norm = nn.utils.clip_grad_norm_(model.parameters(), model.max_norm)
+                    #     for param in model.parameters():
+                    #         lr = learning_rate * (learning_rate_decay ** epoch)
+                    #         param -= lr * param.grad
 
             training_losses.append(np.exp(np.mean(t_losses)))
             if not valid_tokens is None:
@@ -154,6 +163,7 @@ def train_model(model, train_tokens, valid_tokens=None, number_of_epochs=1,
                                                                                   validataion_loss))
                 validation_losses.append(validataion_loss)
     return training_losses, validation_losses
+
 
 def test_model(model, tokens):
     """Test the model on the tokens.
@@ -173,6 +183,7 @@ def test_model(model, tokens):
         output, states = model(prefix, states)
         losses.append(loss_function(output, target).item() / model.batch_size)
     return np.exp(np.mean(losses))
+
 
 def complete_sequence(model, prefix_tokens, sequence_end_token, max_sequence_length=1000):
     """Using lstm language model, to complete the sequence.
@@ -208,9 +219,36 @@ def complete_sequence(model, prefix_tokens, sequence_end_token, max_sequence_len
     return result
 
 
+def prep_embedding_layer(vectors, trainable=False):
+    """A helper function to return pytorch nn embedding layer.
+
+    :param vectors: weight matrix of pre-trained or randomized vectors
+    :param trainable: bool, default to False. If False, keep static.
+    :return: torch sparse embedding layer, number of embeddings, and number of embedding dims
+
+    source: https://medium.com/@martinpella/how-to-use-pre-trained-word-embeddings-in-pytorch-71ca59249f76
+    """
+
+    num_embeddings, embedding_dim = vectors.size()
+
+    embedding_layer = nn.Embedding(num_embeddings, embedding_dim)
+    embedding_layer.load_state_dict({'weight': vectors})
+
+    if trainable:
+        embedding_layer.weight.requires_grad = True
+    else:
+        embedding_layer.weight.requires_grad = False
+
+    return embedding_layer
+
+
 class LSTM(nn.Module):
-    def __init__(self, embedding_size, number_of_layers, dropout_probability,
-                 lstm_configuration):
+    def __init__(self
+                 , embedding_size
+                 , number_of_layers
+                 , dropout_probability
+                 , lstm_configuration
+                 ):
         """Initializetion for LSTM module.
 
         Args:
@@ -282,10 +320,23 @@ class LSTM(nn.Module):
 
 
 class Model(nn.Module):
-    def __init__(self, dictionary_size, embedding_size=100, number_of_layers=1,
-                 dropout_probability=0.3, batch_size=64, sequence_length=30, max_norm=2,
-                 max_init_param=0.01, device="cpu", sequence_step_size=None,
-                 lstm_configuration="default"):
+    def __init__(self
+                 , dictionary_size
+                 , embedding_size=100
+                 , number_of_layers=1
+                 , dropout_probability=0.3
+                 , batch_size=64
+                 , sequence_length=30
+                 , max_norm=2
+                 , max_init_param=0.01
+                 , device="cpu"
+                 , sequence_step_size=None
+                 , lstm_configuration="default"
+                 , embedding_vectors=None
+                 , embedding_trainable=False
+                 , learning_rate=1
+                 , learning_rate_decay=0.8
+                 ):
         """Initialization for the model.
 
         Args:
@@ -322,20 +373,26 @@ class Model(nn.Module):
 
         # Set up the architecture.
         self.embedding = nn.Embedding(dictionary_size, embedding_size)
-        self.lstm = LSTM(self.embedding_size, number_of_layers,
-                         dropout_probability, lstm_configuration)
+
+        self.lstm = LSTM(self.embedding_size
+                         , number_of_layers
+                         , dropout_probability
+                         , lstm_configuration
+                         )
+
         self.dropout = nn.Dropout(dropout_probability)
-        #self.pre_output = nn.Sequential(nn.Linear(self.embedding_size, self.embedding_size))
 
         # Set initial weights.
         for param in self.parameters():
             nn.init.uniform_(param, -max_init_param, max_init_param)
+
+        if embedding_vectors is not None:
+            self.embedding = prep_embedding_layer(vectors=embedding_vectors, trainable=embedding_trainable)
 
     def forward(self, X, states=None):
         X = self.embedding(X)
         X = self.dropout(X)
         X, states = self.lstm(X, states)
         X = self.dropout(X)
-        #X = self.pre_output(X)
         output = torch.tensordot(X, self.embedding.weight, dims=([2], [1]))
         return output, states
