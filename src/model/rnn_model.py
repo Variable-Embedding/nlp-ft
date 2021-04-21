@@ -335,7 +335,7 @@ class Model(nn.Module):
                  , sequence_step_size=None
                  , lstm_configuration="default"
                  , embedding_vectors=None
-                 , embedding_trainable=False
+                 , embedding_trainable=True
                  ):
         """Initialization for the model.
 
