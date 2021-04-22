@@ -69,7 +69,7 @@ class RunLMExperiment(BaseStage):
         self.logger.info("-" * 40)
 
     def run(self):
-        """
+        """Cycle through combinations of experiment configurations.
         """
         for corpus in self.corpus_type:
 
