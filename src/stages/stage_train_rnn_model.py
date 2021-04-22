@@ -95,13 +95,13 @@ class TrainRnnModelStage(BaseStage):
                                                      , **self.train_config)
             self.logger.info("Finished model training.")
             self.logger.info("Saving the model...")
-            file_path = join(constants.DATA_PATH, "{}.{}.model.pkl".format(self.corpus_type,
+            file_path = join(constants.DATA_PATH, "{}.{}.model.pkl".format(self.parent.topic,
                                                                            lstm_config))
             torch.save(model, file_path)
 
             self.logger.info("Saving training and validation losses to csv...")
             train_valid_losses = np.column_stack((train_losses, valid_losses[1:]))
-            file_path = join(constants.DATA_PATH, "{}.{}.losses.csv".format(self.corpus_type,
+            file_path = join(constants.DATA_PATH, "{}.{}.losses.csv".format(self.parent.topic,
                                                                             lstm_config))
             np.savetxt(file_path, train_valid_losses, delimiter=", ", header="train, valid")
 
@@ -116,6 +116,6 @@ class TrainRnnModelStage(BaseStage):
             plt.ylabel("perplexity")
             plt.yscale("log")
             plt.legend()
-            plt.savefig(join(constants.DATA_PATH, "{}.{}.preplexity.png".format(self.corpus_type,
+            plt.savefig(join(constants.DATA_PATH, "{}.{}.preplexity.png".format(self.parent.topic,
                                                                                 lstm_config)))
         return True

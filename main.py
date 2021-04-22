@@ -10,7 +10,7 @@ if __name__ == '__main__':
 
     parser = argparse.ArgumentParser(description='Running a pipeline.')
     parser.add_argument('--config-file', action='append', nargs='+')
-    # parser.add_argument('--topic', nargs='?', default="countries")
+    parser.add_argument('--topic', nargs='?', default="countries")
     args = parser.parse_args()
 
     pywiki_logger = logging.getLogger("pywiki")
