@@ -34,11 +34,11 @@ def make_corpra_vocab(logger, tokenizer, vectors_cache=None, min_freq=None, corp
     Returns: v, a torchtext objecting having global vocabulary, lookup tables, and embedding layers
 
     """
-    logger.info('Starting to parse corpra into vocab and iterable objects.')
+    logger.info('Starting to parse corpra into vocab and iterable objects. This may take a while.')
     corpra = {}
     counter = Counter()
     min_freq = 1 if min_freq is None else min_freq
-
+    logger.info(f'Loading vectors from {vectors_cache}.')
     vectors = Vectors(vectors_cache)
 
     if corpra_cache is not None:
@@ -47,7 +47,7 @@ def make_corpra_vocab(logger, tokenizer, vectors_cache=None, min_freq=None, corp
             key = 'train' if '.train.' in corpus_cache else 'test' if '.test.' in corpus_cache else 'valid'
             corpus = []
             f = open(corpus_cache, 'r')
-
+            logger.info(f'Tokenizing and making vocabulary for {key} set.')
             for line in f:
                 counter.update(tokenizer(line))
                 corpus.extend(tokenizer(line))
@@ -58,6 +58,7 @@ def make_corpra_vocab(logger, tokenizer, vectors_cache=None, min_freq=None, corp
         for idx, corpus_object in enumerate(corpra_object):
             key = 'train' if idx == 0 else 'valid' if idx == 1 else 'test'
             corpus = []
+            logger.info(f'Tokenizing and making vocabulary for {key} set.')
             for line in corpus_object:
                 counter.update(tokenizer(line))
                 corpus.extend(tokenizer(line))
@@ -70,6 +71,7 @@ def make_corpra_vocab(logger, tokenizer, vectors_cache=None, min_freq=None, corp
     corpra_numeric = {}
 
     for data_set, corpus in corpra.items():
+        logger.info(f'Convering string tokens to numeric tokens for {data_set}.')
         corpus_numeric = []
         for line in corpus:
             numeric_tokens = text_pipeline(line)
@@ -87,14 +89,14 @@ def make_corpra_vocab(logger, tokenizer, vectors_cache=None, min_freq=None, corp
     # the torch vocab object has mapped the vocab index to the embedding layer
     assert random_word_curr_vector.all() == random_word_orig_vector.all()
 
-
     return v, corpra_numeric
 
 
 def make_benchmark_corpra(vocab, tokenizer, cache_paths=None, corpra_object=None):
     """Leveraging torchtext functions.
     Args:
-        cache_paths: a list of os paths to locations of text
+        corpra_object: optional but strongly recommended, if passed, provide a torchtext object of vocab
+        cache_paths: optional, if passed, provide a list of os paths to locations of text
         vocab: a torchtext vocab object
         tokenizer: a torchtext tokenizer object
     Returns:
