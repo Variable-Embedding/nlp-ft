@@ -45,6 +45,7 @@ class TrainRnnModelStage(BaseStage):
         self.train_config = train_config
         self.lstm_configs = model_config['lstm_configs'] if model_config['lstm_configs'] is not None else model_config['lstm_configiratopm']
         self.dictionary = dictionary
+        self.topic = None
 
     def pre_run(self):
         """The function that is executed before the stage is run.
@@ -81,7 +82,7 @@ class TrainRnnModelStage(BaseStage):
         self.logger.info("Dictionary contains {} tokens.".format(len(self.dictionary)))
 
         for lstm_config in self.lstm_configs:
-            self.parent.topic = lstm_config
+            self.topic = lstm_config
             model = Model(dictionary_size=len(self.dictionary)
                           , embedding_vectors=self.vectors
                           , embedding_size=self.vectors.size()[1]
@@ -96,13 +97,13 @@ class TrainRnnModelStage(BaseStage):
             self.logger.info("Finished model training.")
             self.logger.info("Saving the model...")
             file_path = join(constants.DATA_PATH, "{}.{}.model.pkl".format(self.parent,
-                                                                           self.parent.topic))
+                                                                           self.topic))
             torch.save(model, file_path)
 
             self.logger.info("Saving training and validation losses to csv...")
             train_valid_losses = np.column_stack((train_losses, valid_losses[1:]))
             file_path = join(constants.DATA_PATH, "{}.{}.losses.csv".format(self.parent,
-                                                                            self.parent.topic))
+                                                                            self.topic))
             np.savetxt(file_path, train_valid_losses, delimiter=", ", header="train, valid")
 
             self.logger.info("Performing model evaluation...")
@@ -117,5 +118,5 @@ class TrainRnnModelStage(BaseStage):
             plt.yscale("log")
             plt.legend()
             plt.savefig(join(constants.DATA_PATH, "{}.{}.preplexity.png".format(self.parent,
-                                                                                self.parent.topic)))
+                                                                                self.topic)))
         return True
