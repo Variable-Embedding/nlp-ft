@@ -23,3 +23,4 @@ stages:
   number_of_epochs: 2
   lstm_configs:
     - default
+    - att-emb

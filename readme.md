@@ -47,9 +47,48 @@ _Note_: By default, make benchmark will get everything that is currently availab
 make benchmark
 ```
 
-4. Run the model pipeline. 
+4. Run the experiment pipeline for language models ("lm"). 
 ```terminal
-make model
+make lm-experiement
+```
+
+* The LM experiment can be controlled with run_lm_experiment_pipeline.yaml:
+```terminal
+
+# The following configuration will run experiements for three copra, 
+# each with the 50d and 100d embeddings for glove, 
+# each with the given training and model params, 
+# run each with the lstm architecture, 
+# and run two variations of the lstm. 
+
+# in effect, we are running the experiment twice for each corpus with multiple configurations.
+
+stages:
+- name: run_lm_experiment
+  corpus_type:
+  - wikitext2
+  - wikitext103
+  - penntreebank
+  embedding_type:
+  - glove.6B.50d
+  - glove.6B.100d
+  batch_size: 128
+  max_init_param: 0.05
+  max_norm: 5
+  number_of_layers: 2
+  sequence_length: 30
+  sequence_step_size: 10
+  dropout_probability: 0.1
+  device: gpu
+  model_type:
+  - lstm
+  - lstm
+  learning_rate_decay: 0.85
+  learning_rate: 1
+  number_of_epochs: 2
+  lstm_configs:
+    - default
+    - att-emb
 ```
 
 5. Optional: Setup and configure pypy3 for super fast code. 
