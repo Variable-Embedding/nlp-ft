@@ -56,12 +56,12 @@ make benchmark
 ```terminal
 
 # The following configuration will run experiements for three copra, 
-# each with the 50d and 100d embeddings for glove, 
+# each with the three version of glove embeddings, 
 # each with the given training and model params, 
 # run each with the lstm architecture, 
 # and run two variations of the lstm. 
 
-# in effect, we are running the experiment twice for each corpus with multiple configurations.
+# in effect, we are running the experiment n times for each corpus with m configurations.
 
 stages:
 - name: run_lm_experiment
@@ -70,7 +70,14 @@ stages:
   - penntreebank
   embedding_type:
   - glove.6B.50d
-  - glove.6B.100d
+  - glove.6B.300d
+  - glove.840B.300d
+  model_type:
+  - lstm
+  - lstm
+  lstm_configs:
+    - default
+    - res-ff-emb
   batch_size: 128
   max_init_param: 0.05
   max_norm: 5
@@ -79,22 +86,12 @@ stages:
   sequence_step_size: 10
   dropout_probability: 0.1
   device: gpu
-  model_type:
-  - lstm
-  - lstm
   learning_rate_decay: 0.85
   learning_rate: 1
   number_of_epochs: 2
-  lstm_configs:
-    - default
-    - att-emb
-- name: rnn_training_comparison
-  lstm_configs:
-    - default
-    - att-emb
 ```
 
-5. Optional: Setup and configure pypy3 for super fast code. 
+5. Optional: Setup and configure pypy3 (THIS IS EXPERIMENTAL - NOT WORKING RIGHT NOW).
 * Create a new virtual environment or conda environment, then activate it. 
 * For MacOS users, brew install pypy3
 ```terminal
