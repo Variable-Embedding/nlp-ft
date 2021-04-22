@@ -15,7 +15,6 @@ class RunLMExperiment(BaseStage):
     logger = logging.getLogger("pipeline").getChild("run_lm_experiment")
 
     def __init__(self
-                 , parent='lm_experiment'
                  , corpus_type=None
                  , embedding_type=None
                  , batch_size=128
@@ -88,6 +87,7 @@ class RunLMExperiment(BaseStage):
                 data.run()
 
                 for model_type in self.model_type:
+                    self.parent = f"{corpus}_{embedding}_{model_type}"
                     self.logger.info("=" * 40)
                     self.logger.info(f'Starting experiments for Corpus: {corpus}'
                                      f', with Embedding: {embedding}'

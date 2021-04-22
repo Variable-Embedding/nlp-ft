@@ -33,7 +33,6 @@ class TrainRnnModelStage(BaseStage):
         """Initialization for model training stage.
         """
         super(TrainRnnModelStage, self).__init__(parent)
-        self.parent = parent
         self.train_file = train_file
         self.test_file = test_file
         self.valid_file = valid_file
@@ -58,7 +57,7 @@ class TrainRnnModelStage(BaseStage):
         """Train the model.
 
         Returns:
-            True if the stage execution succeded, False otherwise.
+            True if the stage execution worked, False otherwise.
         """
 
         train_tokens = self.train_file
@@ -81,7 +80,7 @@ class TrainRnnModelStage(BaseStage):
         self.logger.info("Dictionary contains {} tokens.".format(len(self.dictionary)))
 
         for lstm_config in self.lstm_configs:
-            self.parent.topic = lstm_config
+            self.parent.topic = self.lstm_config
             model = Model(dictionary_size=len(self.dictionary)
                           , embedding_vectors=self.vectors
                           , embedding_size=self.vectors.size()[1]
@@ -95,14 +94,14 @@ class TrainRnnModelStage(BaseStage):
                                                      , **self.train_config)
             self.logger.info("Finished model training.")
             self.logger.info("Saving the model...")
-            file_path = join(constants.DATA_PATH, "{}.{}.model.pkl".format(self.parent.topic,
-                                                                           lstm_config))
+            file_path = join(constants.DATA_PATH, "{}.{}.model.pkl".format(self.parent,
+                                                                           self.parent.topic))
             torch.save(model, file_path)
 
             self.logger.info("Saving training and validation losses to csv...")
             train_valid_losses = np.column_stack((train_losses, valid_losses[1:]))
-            file_path = join(constants.DATA_PATH, "{}.{}.losses.csv".format(self.parent.topic,
-                                                                            lstm_config))
+            file_path = join(constants.DATA_PATH, "{}.{}.losses.csv".format(self.parent,
+                                                                            self.parent.topic))
             np.savetxt(file_path, train_valid_losses, delimiter=", ", header="train, valid")
 
             self.logger.info("Performing model evaluation...")
@@ -116,6 +115,6 @@ class TrainRnnModelStage(BaseStage):
             plt.ylabel("perplexity")
             plt.yscale("log")
             plt.legend()
-            plt.savefig(join(constants.DATA_PATH, "{}.{}.preplexity.png".format(self.parent.topic,
-                                                                                lstm_config)))
+            plt.savefig(join(constants.DATA_PATH, "{}.{}.preplexity.png".format(self.parent,
+                                                                                self.parent.topic)))
         return True
