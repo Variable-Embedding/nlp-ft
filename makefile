@@ -29,7 +29,7 @@ model-pypy:
 	$(PYPY3) main.py --config-file run_model_pipeline.yaml
 
 lm-experiment:
-	$(PYTHON) main.py --config-file run_lm_experiment_pipeline.yaml --topic=lm_exp
+	$(PYTHON) main.py --config-file run_lm_experiment_pipeline.yaml
 
 clean:
 	find . -type f -name \*.pyc -exec rm {} \;
