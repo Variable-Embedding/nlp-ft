@@ -70,15 +70,14 @@ stages:
   - penntreebank
   embedding_type:
   - glove.6B.50d
-  - glove.6B.300d
   - glove.840B.300d
   model_type:
-  - lstm
-  - lstm
+    - lstm
+    - lstm
   lstm_configs:
     - default
     - res-ff-emb
-  batch_size: 128
+  batch_size: 1024
   max_init_param: 0.05
   max_norm: 5
   number_of_layers: 2
@@ -89,6 +88,7 @@ stages:
   learning_rate_decay: 0.85
   learning_rate: 1
   number_of_epochs: 2
+  min_freq: 5
 ```
 
 5. Optional: Setup and configure pypy3 (THIS IS EXPERIMENTAL - NOT WORKING RIGHT NOW).
