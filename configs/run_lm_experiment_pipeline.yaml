@@ -25,3 +25,7 @@ stages:
   lstm_configs:
     - default
     - att-emb
+- name: rnn_training_comparison
+  lstm_configs:
+    - default
+    - att-emb
