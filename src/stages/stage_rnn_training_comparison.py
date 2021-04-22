@@ -22,7 +22,7 @@ class RnnTrainingComparisonStage(BaseStage):
     name = "rnn_training_comparison"
     logger = logging.getLogger("pipeline").getChild("rnn_training_comparison")
 
-    def __init__(self, parent=None, lstm_configs=None):
+    def __init__(self, parent=None, lstm_configs=None, corpus_type=None):
         """Initialization for model training stage.
 
         Args:
@@ -31,6 +31,7 @@ class RnnTrainingComparisonStage(BaseStage):
         """
         super(RnnTrainingComparisonStage, self).__init__(parent)
         self.lstm_configs = ["default"] if lstm_configs is None else lstm_configs
+        self.corpus_type = corpus_type
 
     def pre_run(self):
         """The function that is executed before the stage is run.
@@ -47,7 +48,7 @@ class RnnTrainingComparisonStage(BaseStage):
         """
         plt.figure()
         for lstm_config in self.lstm_configs:
-            file_path = join(constants.DATA_PATH, "{}.{}.losses.csv".format(self.parent.topic,
+            file_path = join(constants.DATA_PATH, "{}.{}.losses.csv".format(self.corpus_type,
                                                                             lstm_config))
             train_valid_losses = np.genfromtxt(file_path, delimiter=", ", skip_header=1)
             train_losses = train_valid_losses[:,0]

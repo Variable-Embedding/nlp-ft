@@ -17,9 +17,10 @@ import logging
 import numpy as np
 from torchtext.data.utils import get_tokenizer
 import random
+import torch
 
 
-def make_corpra_vocab(corpra_cache, logger, tokenizer, vectors_cache=None, min_freq=None):
+def make_corpra_vocab(logger, tokenizer, vectors_cache=None, min_freq=None, corpra_cache=None, corpra_object=None):
     """A helper function to create torchtext vocab objects from benchmark texts.
     Combines pre-trained embedding vectors with torch objects.
 
@@ -33,20 +34,49 @@ def make_corpra_vocab(corpra_cache, logger, tokenizer, vectors_cache=None, min_f
     Returns: v, a torchtext objecting having global vocabulary, lookup tables, and embedding layers
 
     """
+    logger.info('Starting to parse corpra into vocab and iterable objects.')
+    corpra = {}
     counter = Counter()
     min_freq = 1 if min_freq is None else min_freq
 
     vectors = Vectors(vectors_cache)
 
-    for corpus_cache in corpra_cache:
-        logger.info(f'Reading corpus cache from {corpus_cache}')
+    if corpra_cache is not None:
+        for corpus_cache in corpra_cache:
+            logger.info(f'Reading corpus cache from {corpus_cache}')
+            key = 'train' if '.train.' in corpus_cache else 'test' if '.test.' in corpus_cache else 'valid'
+            corpus = []
+            f = open(corpus_cache, 'r')
 
-        f = open(corpus_cache, 'r')
+            for line in f:
+                counter.update(tokenizer(line))
+                corpus.extend(tokenizer(line))
+            corpra.update({key: corpus})
 
-        for line in f:
-            counter.update(tokenizer(line))
+    elif corpra_object is not None:
+
+        for idx, corpus_object in enumerate(corpra_object):
+            key = 'train' if idx == 0 else 'valid' if idx == 1 else 'test'
+            corpus = []
+            for line in corpus_object:
+                counter.update(tokenizer(line))
+                corpus.extend(tokenizer(line))
+            corpra.update({key: corpus})
 
     v = Vocab(counter, min_freq=min_freq, vectors=vectors, vectors_cache=vectors_cache)
+
+    text_pipeline = lambda x: [v[token] for token in tokenizer(x)]
+
+    corpra_numeric = {}
+
+    for data_set, corpus in corpra.items():
+        corpus_numeric = []
+        for line in corpus:
+            numeric_tokens = text_pipeline(line)
+            corpus_numeric.extend(numeric_tokens)
+
+        corpus_numeric = torch.tensor(corpus_numeric, dtype=torch.long)
+        corpra_numeric.update({data_set: corpus_numeric})
 
     logger.info(f'Generated torch Vocab object with dictionary size of {len(v.stoi)}.')
 
@@ -57,10 +87,48 @@ def make_corpra_vocab(corpra_cache, logger, tokenizer, vectors_cache=None, min_f
     # the torch vocab object has mapped the vocab index to the embedding layer
     assert random_word_curr_vector.all() == random_word_orig_vector.all()
 
-    return v
+    return v, corpra_numeric
 
 
-def corpra_caches(corpus_type, logger):
+def make_benchmark_corpra(vocab, tokenizer, cache_paths=None, corpra_object=None):
+    """Leveraging torchtext functions.
+    Args:
+        cache_paths: a list of os paths to locations of text
+        vocab: a torchtext vocab object
+        tokenizer: a torchtext tokenizer object
+    Returns:
+        corpus: a dictionary of corpra keyed by 'train', 'valid', and 'test' stages
+    """
+
+    corpra = {}
+    text_pipeline = lambda x: [vocab[token] for token in tokenizer(x)]
+
+    if cache_paths is not None:
+        for cache_path in cache_paths:
+            key = 'train' if '.train.' in cache_path else 'test' if '.test.' in cache_path else 'valid'
+            f = open(cache_path, 'r')
+            corpus = []
+
+            for line in f:
+                c = text_pipeline(line)
+                corpus.extend(c)
+
+            corpus = torch.tensor(corpus, dtype=torch.long)
+            corpra.update({key: corpus})
+
+            f.close()
+
+    elif corpra_object is not None:
+
+        for idx, corpus_object in enumerate(corpra_object):
+            key = 'train' if idx == 0 else 'valid' if idx == 1 else 'test'
+            for i in corpus_object:
+                print(i)
+
+    return corpra
+
+
+def corpra_caches(logger, corpus_type=None):
     """A helper function to return a series of os paths to text caches
 
     Args:
@@ -71,7 +139,14 @@ def corpra_caches(corpus_type, logger):
 
     """
 
-    corpus_type = 'wikitext-2' if "wikitext2" == corpus_type else "wikitext-103" if "wikitext103" == corpus_type else corpus_type
+    folder_names = {'wikitext2': 'wikitext-2'
+        , 'wikitext103': 'wikitext-103'
+        , 'imdb': 'aclimdb'}
+
+    if any(corpus_type in i for i in folder_names.keys()):
+        corpus_folder_name = folder_names[corpus_type]
+        corpus_type = corpus_type.replace(corpus_type, corpus_folder_name)
+
     cache_path = os.sep.join([constants.DATA_PATH, corpus_type])
 
     cache_paths = []
@@ -129,15 +204,17 @@ class Benchmark2Embeddings(BaseStage):
     name = "benchmark2embeddings"
     logger = logging.getLogger("pipeline").getChild("benchmark2embeddings_stage")
 
-    def __init__(self, parent=None, embedding_type=None, corpus_type=None, tokenizer=None):
+    def __init__(self, parent=None, embedding_type=None, corpus_type=None, corpra_object=None, tokenizer=None):
         """Initialization for Benchmark 2 Embeddings Stage.
         """
         super().__init__(parent)
         self.embedding_type = 'glove.6B.100d' if embedding_type is None else embedding_type
-        self.corpus_type = 'wikitext2' if corpus_type is None else corpus_type
+        self.corpus_type = corpus_type
         self.vocab = None
         self.corpra_cache = None
         self.tokenizer = get_tokenizer('basic_english') if tokenizer is None else tokenizer
+        self.corpra_object = corpra_object
+        self.corpra_numeric = None
 
     def pre_run(self):
         """The function that is executed before the stage is run.
@@ -152,10 +229,13 @@ class Benchmark2Embeddings(BaseStage):
         :return: True if the stage execution succeeded, False otherwise.
         """
         vectors_cache = embedding_cache(self.embedding_type, self.logger)
-        self.corpra_cache = corpra_caches(self.corpus_type, self.logger)
-        self.vocab = make_corpra_vocab(corpra_cache=self.corpra_cache
-                                       , vectors_cache=vectors_cache
-                                       , logger=self.logger
-                                       , tokenizer=self.tokenizer)
+        if self.corpus_type is not None:
+            self.corpra_cache = corpra_caches(corpus_type=self.corpus_type, logger=self.logger)
+
+        self.vocab, self.corpra_numeric = make_corpra_vocab(corpra_cache=self.corpra_cache
+                                                            , vectors_cache=vectors_cache
+                                                            , logger=self.logger
+                                                            , tokenizer=self.tokenizer
+                                                            , corpra_object=self.corpra_object)
 
         return True

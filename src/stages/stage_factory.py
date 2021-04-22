@@ -6,6 +6,7 @@ from src.stages.stage_get_benchmark_corpra import GetBenchmarkCorpra
 from src.stages.stage_benchmark2embeddings import Benchmark2Embeddings
 from src.stages.stage_train_rnn_model import TrainRnnModelStage
 from src.stages.stage_rnn_training_comparison import RnnTrainingComparisonStage
+from src.experiments.run_lm_experiment import RunLMExperiment
 from src.util import constants
 
 from os.path import join
@@ -17,7 +18,8 @@ possible_stages = [
     GetBenchmarkCorpra,
     Benchmark2Embeddings,
     TrainRnnModelStage,
-    RnnTrainingComparisonStage
+    RnnTrainingComparisonStage,
+    RunLMExperiment
 ]
 stage_name_mapping = {s.name: s for s in possible_stages}
 
