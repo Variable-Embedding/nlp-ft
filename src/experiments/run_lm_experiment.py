@@ -32,6 +32,7 @@ class RunLMExperiment(BaseStage):
                  , learning_rate=1
                  , number_of_epochs=1
                  , lstm_configs=None
+                 , min_freq=1
                  ):
         """Initialization for experimental stages.
         """
@@ -39,6 +40,7 @@ class RunLMExperiment(BaseStage):
         self.corpus_type = corpus_type
         self.embedding_type = embedding_type
         self.model_type = model_type
+        self.min_freq = min_freq
         self.model_config = {
             'batch_size': batch_size
             , 'max_init_param': max_init_param
@@ -79,7 +81,7 @@ class RunLMExperiment(BaseStage):
                 pre_trained_embedding = GetPreTrainedEmbeddingsStage(embedding_type=embedding)
                 pre_trained_embedding.run()
 
-                data = Benchmark2Embeddings(embedding_type=embedding, corpra_object=corpra_object)
+                data = Benchmark2Embeddings(embedding_type=embedding, corpra_object=corpra_object, min_freq=self.min_freq)
                 data.run()
 
                 for model_type in self.model_type:

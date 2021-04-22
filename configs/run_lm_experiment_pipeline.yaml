@@ -21,6 +21,7 @@ stages:
   learning_rate_decay: 0.85
   learning_rate: 1
   number_of_epochs: 2
+  min_freq: 5
   lstm_configs:
     - default
     - att-emb

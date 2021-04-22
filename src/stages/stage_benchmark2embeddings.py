@@ -204,7 +204,14 @@ class Benchmark2Embeddings(BaseStage):
     name = "benchmark2embeddings"
     logger = logging.getLogger("pipeline").getChild("benchmark2embeddings_stage")
 
-    def __init__(self, parent=None, embedding_type=None, corpus_type=None, corpra_object=None, tokenizer=None):
+    def __init__(self
+                 , parent=None
+                 , embedding_type=None
+                 , corpus_type=None
+                 , corpra_object=None
+                 , tokenizer=None
+                 , min_freq=1
+                 ):
         """Initialization for Benchmark 2 Embeddings Stage.
         """
         super().__init__(parent)
@@ -215,6 +222,7 @@ class Benchmark2Embeddings(BaseStage):
         self.tokenizer = get_tokenizer('basic_english') if tokenizer is None else tokenizer
         self.corpra_object = corpra_object
         self.corpra_numeric = None
+        self.min_freq = min_freq
 
     def pre_run(self):
         """The function that is executed before the stage is run.
@@ -236,6 +244,7 @@ class Benchmark2Embeddings(BaseStage):
                                                             , vectors_cache=vectors_cache
                                                             , logger=self.logger
                                                             , tokenizer=self.tokenizer
-                                                            , corpra_object=self.corpra_object)
+                                                            , corpra_object=self.corpra_object
+                                                            , min_freq=self.min_freq)
 
         return True
