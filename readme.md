@@ -14,6 +14,8 @@ NLP pipeline for Spring 2021.
 git clone https://github.com/Variable-Embedding/nlp-ft
 ```
 
+* To run from Google Colab, make a copy of the following colab notebook: [https://colab.research.google.com/drive/1WI6atgi6TW8wikipHfj5adOAJ_oZrwy6?usp=sharing](https://colab.research.google.com/drive/1WI6atgi6TW8wikipHfj5adOAJ_oZrwy6?usp=sharing)
+
 2. After cloning, selecting a branch, and an IDLE of your choosing, from terminal, run the command make install to load all dependencies:
 
 * optional but recommended step: create a new anaconda environment.
