@@ -90,7 +90,7 @@ class RunLMExperiment(BaseStage):
                 for model_type in self.model_type:
                     self.parent = f"{corpus}_{embedding}_{model_type}"
                     self.logger.info("=" * 40)
-                    self.logger.info(f'Starting experiments for Corpus: {corpus}'
+                    self.logger.info(f'Running experiments for Corpus: {corpus}'
                                      f', with Embedding: {embedding}'
                                      f', and Model Type: {model_type}.')
                     self.logger.info("=" * 40)
