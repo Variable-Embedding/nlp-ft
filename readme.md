@@ -101,13 +101,8 @@ brew install pypy3
 ```terminal
 make install-pypy
 ```
-* Run model with pypy3:
-```terminal
-make model-pypy
-```
+
 * For help on pypy3 and brew, see [pypy3 docs](https://doc.pypy.org/en/latest/install.html) and [brew formula](https://formulae.brew.sh/formula/pypy3).
-
-
 
 * See [torchtext-glove](https://torchtext.readthedocs.io/en/latest/vocab.html) documents on pretrained_aliases for a full listing of available downloads.
 

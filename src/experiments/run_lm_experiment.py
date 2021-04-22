@@ -71,6 +71,7 @@ class RunLMExperiment(BaseStage):
     def run(self):
         """Cycle through combinations of experiment configurations.
         """
+        # TODO: Set up a way to consolidate and produce a final report of all experiments. 
         for corpus in self.corpus_type:
 
             for embedding in self.embedding_type:
