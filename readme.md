@@ -7,16 +7,19 @@ This is a natural language processing (NLP) pipeline built for research during [
 NLP pipeline for Spring 2021.
 
 1. Get pre-trained GloVe embeddings.
+2. Get benchmark corpra such as wikitext2, penn tree bank, and imdb
+3. Train a neural network with variable parameters
 
 ## Getting Started
 
+1. To run from Google Colab, make a copy of the following colab notebook: [https://colab.research.google.com/drive/1WI6atgi6TW8wikipHfj5adOAJ_oZrwy6?usp=sharing](https://colab.research.google.com/drive/1WI6atgi6TW8wikipHfj5adOAJ_oZrwy6?usp=sharing)
+
+* The colab noteook will clone and run the lm-experiment.
+
+2. To run from your machine, clone with the code below. 
 ```terminal
 git clone https://github.com/Variable-Embedding/nlp-ft
 ```
-
-* To run from Google Colab, make a copy of the following colab notebook: [https://colab.research.google.com/drive/1WI6atgi6TW8wikipHfj5adOAJ_oZrwy6?usp=sharing](https://colab.research.google.com/drive/1WI6atgi6TW8wikipHfj5adOAJ_oZrwy6?usp=sharing)
-
-2. After cloning, selecting a branch, and an IDLE of your choosing, from terminal, run the command make install to load all dependencies:
 
 * optional but recommended step: create a new anaconda environment.
 ```terminal
@@ -92,7 +95,7 @@ stages:
   number_of_epochs: 2
   min_freq: 5
 ```
-
+![colab snapshot](colab_how_to.png)
 5. Optional: Setup and configure pypy3 (THIS IS EXPERIMENTAL - NOT WORKING RIGHT NOW).
 * Create a new virtual environment or conda environment, then activate it. 
 * For MacOS users, brew install pypy3
