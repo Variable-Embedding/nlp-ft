@@ -7,6 +7,7 @@ from src.model.model_tools import prep_embedding_layer
 from src.model.model_lstm import LSTM
 from src.model.model_ft import FT
 
+
 class Model(nn.Module):
     def __init__(self
                  , dictionary_size
@@ -23,6 +24,7 @@ class Model(nn.Module):
                  , embedding_vectors=None
                  , embedding_trainable=True
                  , model_type=None
+                 , **kwargs
                  ):
         """Initialization for the model.
 
@@ -64,9 +66,9 @@ class Model(nn.Module):
 
         if model_type == 'lstm':
             self.model_module = LSTM(self.embedding_size
-                                   , number_of_layers
-                                   , dropout_probability
-                                   , lstm_configuration)
+                                     , number_of_layers
+                                     , dropout_probability
+                                     , lstm_configuration)
 
         elif model_type == 'ft':
             # TODO: FT class
@@ -98,4 +100,3 @@ class Model(nn.Module):
             # some kind of linear thing here
             # some kind of ReLu activation stuff here
             # return some output and states here
-

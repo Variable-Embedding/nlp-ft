@@ -1,24 +1,16 @@
-"""Stage for pre-processing text.
+"""Stage running training iterations.
 """
-from src.stages.stage_benchmark2embeddings import Benchmark2Embeddings
-from src.stages.stage_get_pre_trained_embedding import GetPreTrainedEmbeddingsStage
-from src.stages.stage_get_benchmark_corpra import GetBenchmarkCorpra
 from src.model.model_base import Model
 from src.model.model_tools import train_model, test_model
 from src.stages.base_stage import BaseStage
 from src.util import constants
-from src.util.dictionary import dictionary_file_path
-from src.util.file import get_integer_tokens_from_file
 
 from os.path import join
-import os
 
-import json
 import logging
 import matplotlib.pyplot as plt
 import numpy as np
 import torch
-import yaml
 
 
 class TrainRnnModelStage(BaseStage):
@@ -30,38 +22,30 @@ class TrainRnnModelStage(BaseStage):
     def __init__(self
                  , parent=None
                  , corpus_type=None
-                 , embedding_type=None
+                 , vectors=None
                  , train_file=None
                  , test_file=None
                  , valid_file=None
-                 , model_config_file=None
-                 , training_config_file=None
-                 , lstm_configs=None
                  , dictionary=None
+                 , model_config=None
+                 , train_config=None
+                 , **kwargs
                  ):
         """Initialization for model training stage.
         """
         super(TrainRnnModelStage, self).__init__(parent)
-
-        benchmark = GetBenchmarkCorpra(corpus_type=corpus_type)
-        benchmark.run()
-        pre_trained_embedding = GetPreTrainedEmbeddingsStage(embedding_type=embedding_type)
-        pre_trained_embedding.run()
-        data = Benchmark2Embeddings(embedding_type=embedding_type, corpus_type=corpus_type)
-        data.run()
-
-        corpra = make_benchmark_corpra(data.corpra_cache, data.vocab, data.tokenizer)
-
-        self.train_file = corpra['train'] if corpra else train_file
-        self.test_file = corpra['test'] if corpra else test_file
-        self.valid_file = corpra['valid'] if corpra else valid_file
-        self.dictionary = data.vocab.stoi if data else dictionary
-        self.vectors = data.vocab.vectors
+        self.train_file = train_file
+        self.test_file = test_file
+        self.valid_file = valid_file
+        self.dictionary = dictionary
+        self.vectors = vectors
         self.corpus_type = corpus_type
 
-        self.model_config_filepath = join(constants.CONFIG_PATH, model_config_file)
-        self.training_config_filepath = join(constants.CONFIG_PATH, training_config_file)
-        self.lstm_configs = ["default"] if lstm_configs is None else lstm_configs
+        self.model_config = model_config
+        self.train_config = train_config
+        self.lstm_configs = model_config['lstm_configs'] if model_config['lstm_configs'] is not None else model_config['lstm_configiratopm']
+        self.dictionary = dictionary
+        self.topic = None
 
     def pre_run(self):
         """The function that is executed before the stage is run.
@@ -75,14 +59,8 @@ class TrainRnnModelStage(BaseStage):
         """Train the model.
 
         Returns:
-            True if the stage execution succeded, False otherwise.
+            True if the stage execution worked, False otherwise.
         """
-
-        self.logger.info("Loading model and training configurations...")
-        with open(self.model_config_filepath, "r") as file:
-            model_config = yaml.safe_load(file)
-        with open(self.training_config_filepath, "r") as file:
-            training_config = yaml.safe_load(file)
 
         train_tokens = self.train_file
         self.logger.info("Loaded {} tokens.".format(len(train_tokens)))
@@ -104,32 +82,35 @@ class TrainRnnModelStage(BaseStage):
         self.logger.info("Dictionary contains {} tokens.".format(len(self.dictionary)))
 
         for lstm_config in self.lstm_configs:
-            model_config["lstm_configuration"] = lstm_config
+            self.topic = lstm_config
             model = Model(dictionary_size=len(self.dictionary)
                           , embedding_vectors=self.vectors
                           , embedding_size=self.vectors.size()[1]
-                          , **model_config)
+                          , **self.model_config)
             self.logger.info("Starting model training with lstm configuration {} ...".format(
                 lstm_config))
-            train_losses, valid_losses = train_model(model=model, train_tokens=train_tokens,
-                                                     valid_tokens=valid_tokens, logger=self.logger,
-                                                     **training_config)
+            train_losses, valid_losses = train_model(model=model
+                                                     , train_tokens=train_tokens
+                                                     , valid_tokens=valid_tokens
+                                                     , logger=self.logger
+                                                     , **self.train_config)
             self.logger.info("Finished model training.")
             self.logger.info("Saving the model...")
-            file_path = join(constants.DATA_PATH, "{}.{}.model.pkl".format(self.corpus_type,
-                                                                           lstm_config))
+            file_path = join(constants.DATA_PATH, "{}.{}.model.pkl".format(self.parent,
+                                                                           self.topic))
             torch.save(model, file_path)
 
             self.logger.info("Saving training and validation losses to csv...")
             train_valid_losses = np.column_stack((train_losses, valid_losses[1:]))
-            file_path = join(constants.DATA_PATH, "{}.{}.losses.csv".format(self.corpus_type,
-                                                                            lstm_config))
+            file_path = join(constants.DATA_PATH, "{}.{}.losses.csv".format(self.parent,
+                                                                            self.topic))
             np.savetxt(file_path, train_valid_losses, delimiter=", ", header="train, valid")
 
             self.logger.info("Performing model evaluation...")
             self.logger.info("Test perplexity score: {:.1f}".format(test_model(model, test_tokens)))
             #self.logger.info("Train perplexity score: {:.1f}".format(test_model(model, train_tokens)))
             self.logger.info("Valid perplexity score: {:.1f}".format(valid_losses[-1]))
+            plt.close()
             plt.figure()
             plt.plot(valid_losses[1:], label="validation perplexity")
             plt.plot(train_losses, label="training perplexity")
@@ -137,42 +118,6 @@ class TrainRnnModelStage(BaseStage):
             plt.ylabel("perplexity")
             plt.yscale("log")
             plt.legend()
-            plt.savefig(join(constants.DATA_PATH, "{}.{}.preplexity.png".format(self.corpus_type,
-                                                                                lstm_config)))
+            plt.savefig(join(constants.DATA_PATH, "{}.{}.perplexity.png".format(self.parent,
+                                                                                self.topic)))
         return True
-
-
-def make_benchmark_corpra(cache_paths, vocab, tokenizer):
-    """Leveraging torchtext functions.
-    Args:
-        cache_paths: a list of os paths to locations of text
-        vocab: a torchtext vocab object
-        tokenizer: a torchtext tokenizer object
-    Returns:
-        corpus: a dictionary of corpra keyed by 'train', 'valid', and 'test' stages
-    """
-
-    logging.info('Starting make_torch_corpra()')
-
-    corpra = {}
-
-    for cache_path in cache_paths:
-
-        key = 'train' if '.train.' in cache_path else 'test' if '.test.' in cache_path else 'valid'
-
-        f = open(cache_path, 'r')
-
-        text_pipeline = lambda x: [vocab[token] for token in tokenizer(x)]
-
-        corpus = []
-
-        for line in f:
-            c = text_pipeline(line)
-            corpus.extend(c)
-
-        corpus = torch.tensor(corpus, dtype=torch.long)
-        corpra.update({key: corpus})
-
-        f.close()
-
-    return corpra

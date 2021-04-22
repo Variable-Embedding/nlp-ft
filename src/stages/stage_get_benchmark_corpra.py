@@ -40,7 +40,7 @@ def get_benchmark(corpus_type, benchmark, logger):
                 # wait for a brief period to avoid server abuse
                 time.sleep(3)
         else:
-            benchmark[corpus_type]()
+            return benchmark[corpus_type]()
 
     else:
         logger.info(f'Selected corpus name of "{corpus_type}" not found in list of known benchmarks, try any of \n {list(benchmark.keys())}')
@@ -126,6 +126,7 @@ class GetBenchmarkCorpra(BaseStage):
         super().__init__(parent)
 
         self.corpus_type = 'everything' if corpus_type is None else corpus_type
+        self.corpra = None
 
     def pre_run(self):
         """The function that is executed before the stage is run.
@@ -140,6 +141,9 @@ class GetBenchmarkCorpra(BaseStage):
         :return: True if the stage execution succeeded, False otherwise.
         """
         benchmark = frozen_benchmarks()
-        get_benchmark(corpus_type=self.corpus_type, benchmark=benchmark, logger=self.logger)
+        self.corpra = get_benchmark(corpus_type=self.corpus_type
+                                    , benchmark=benchmark
+                                    , logger=self.logger
+                                    )
 
         return True
