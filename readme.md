@@ -67,7 +67,6 @@ stages:
 - name: run_lm_experiment
   corpus_type:
   - wikitext2
-  - wikitext103
   - penntreebank
   embedding_type:
   - glove.6B.50d
@@ -86,6 +85,10 @@ stages:
   learning_rate_decay: 0.85
   learning_rate: 1
   number_of_epochs: 2
+  lstm_configs:
+    - default
+    - att-emb
+- name: rnn_training_comparison
   lstm_configs:
     - default
     - att-emb
