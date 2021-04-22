@@ -15,6 +15,7 @@ class RunLMExperiment(BaseStage):
     logger = logging.getLogger("pipeline").getChild("run_lm_experiment")
 
     def __init__(self
+                 , parent=None
                  , corpus_type=None
                  , embedding_type=None
                  , batch_size=128
