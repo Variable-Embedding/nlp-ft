@@ -15,7 +15,7 @@ class RunLMExperiment(BaseStage):
     logger = logging.getLogger("pipeline").getChild("run_lm_experiment")
 
     def __init__(self
-                 , parent=None
+                 , parent='lm_experiment'
                  , corpus_type=None
                  , embedding_type=None
                  , batch_size=128
@@ -73,17 +73,18 @@ class RunLMExperiment(BaseStage):
         """
         for corpus in self.corpus_type:
 
-            benchmark = GetBenchmarkCorpra(corpus_type=corpus)
+            benchmark = GetBenchmarkCorpra(corpus_type=corpus, parent=self.parent)
             benchmark.run()
             corpra_object = benchmark.corpra
 
             for embedding in self.embedding_type:
-                pre_trained_embedding = GetPreTrainedEmbeddingsStage(embedding_type=embedding)
+                pre_trained_embedding = GetPreTrainedEmbeddingsStage(embedding_type=embedding, parent=self.parent)
                 pre_trained_embedding.run()
 
                 data = Benchmark2Embeddings(embedding_type=embedding
                                             , corpra_object=corpra_object
-                                            , min_freq=self.min_freq)
+                                            , min_freq=self.min_freq
+                                            , parent=self.parent)
                 data.run()
 
                 for model_type in self.model_type:
@@ -101,6 +102,7 @@ class RunLMExperiment(BaseStage):
                                                  , train_config=self.train_config
                                                  , vectors=data.vocab.vectors
                                                  , dictionary=data.vocab.stoi
+                                                 , parent=self.parent
                                                  )
                     trainer.run()
 

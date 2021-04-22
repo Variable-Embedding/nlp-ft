@@ -33,7 +33,7 @@ class TrainRnnModelStage(BaseStage):
         """Initialization for model training stage.
         """
         super(TrainRnnModelStage, self).__init__(parent)
-
+        self.parent = parent
         self.train_file = train_file
         self.test_file = test_file
         self.valid_file = valid_file
@@ -81,7 +81,7 @@ class TrainRnnModelStage(BaseStage):
         self.logger.info("Dictionary contains {} tokens.".format(len(self.dictionary)))
 
         for lstm_config in self.lstm_configs:
-
+            self.parent.topic = lstm_config
             model = Model(dictionary_size=len(self.dictionary)
                           , embedding_vectors=self.vectors
                           , embedding_size=self.vectors.size()[1]
