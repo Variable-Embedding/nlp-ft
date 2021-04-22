@@ -15,9 +15,9 @@ class RunLMExperiment(BaseStage):
     logger = logging.getLogger("pipeline").getChild("run_lm_experiment")
 
     def __init__(self
+                 , corpus_type
+                 , embedding_type
                  , parent=None
-                 , corpus_type=None
-                 , embedding_type=None
                  , batch_size=128
                  , max_init_param=0.05
                  , max_norm=5
@@ -35,6 +35,26 @@ class RunLMExperiment(BaseStage):
                  , min_freq=1
                  ):
         """Initialization for experimental stages.
+
+        Args:
+            corpus_type: required string, name of a benchmark corpus like "wikitext2"
+            embedding_type: required, string, name of a pre-trained embedding like "glove.6B.300d"
+            parent: optional string, default to meta description of experiment
+            batch_size: optional, integer, default to 128
+            max_init_param: optional, float, default to 0.05
+            max_norm: optional, integer, default to 5
+            number_of_layers: optional, integer, default to 2
+            sequence_length: optional, integer, default to 30
+            sequence_step_size: optional, integer, default to 10
+            dropout_probability: optional, float, default to .1
+            lstm_configuration: optional, default to 'default'
+            device: optional, string, default to "gpu" if exists
+            model_type: optional, string, default to
+            learning_rate_decay: optional, float, default to 0.05
+            learning_rate: optional, float, default to 1.0
+            number_of_epochs: optional, integer, default to 2
+            lstm_configs: optional, a list of strings, default to ["default"]
+            min_freq: optional, integer, default to 1 for filtering out infrequent words to unk token
         """
         super(RunLMExperiment, self).__init__(parent)
         self.corpus_type = corpus_type
@@ -71,7 +91,7 @@ class RunLMExperiment(BaseStage):
     def run(self):
         """Cycle through combinations of experiment configurations.
         """
-        # TODO: Set up a way to consolidate and produce a final report of all experiments. 
+        # TODO: Set up a way to consolidate and produce a final report of all experiments.
         for corpus in self.corpus_type:
 
             for embedding in self.embedding_type:
