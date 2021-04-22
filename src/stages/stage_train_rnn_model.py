@@ -117,6 +117,6 @@ class TrainRnnModelStage(BaseStage):
             plt.ylabel("perplexity")
             plt.yscale("log")
             plt.legend()
-            plt.savefig(join(constants.DATA_PATH, "{}.{}.preplexity.png".format(self.parent,
+            plt.savefig(join(constants.DATA_PATH, "{}.{}.perplexity.png".format(self.parent,
                                                                                 self.topic)))
         return True

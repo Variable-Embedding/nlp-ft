@@ -124,7 +124,7 @@ def parse_embedding_txt(embedding_file_path, logger):
     start_time = time.time()
     with open(embedding_file_path, 'r', encoding="utf-8") as f:
         # for line in f:
-        for line in tqdm(f, total=get_num_lines(embedding_file_path), desc='Opening Embedding File'):
+        for line in tqdm(f, total=get_num_lines(embedding_file_path), desc='Opening Embedding File', position=0):
             word, vector = read_line(line, embedding_dim=embedding_dim)
             embedding_dict.update({word: vector})
     end_time = time.time()

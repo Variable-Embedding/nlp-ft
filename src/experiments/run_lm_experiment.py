@@ -73,11 +73,11 @@ class RunLMExperiment(BaseStage):
         """
         for corpus in self.corpus_type:
 
-            benchmark = GetBenchmarkCorpra(corpus_type=corpus, parent=self.parent)
-            benchmark.run()
-            corpra_object = benchmark.corpra
-
             for embedding in self.embedding_type:
+                benchmark = GetBenchmarkCorpra(corpus_type=corpus, parent=self.parent)
+                benchmark.run()
+                corpra_object = benchmark.corpra
+
                 pre_trained_embedding = GetPreTrainedEmbeddingsStage(embedding_type=embedding, parent=self.parent)
                 pre_trained_embedding.run()
 
