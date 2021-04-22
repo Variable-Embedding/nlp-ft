@@ -62,6 +62,7 @@ class RunLMExperiment(BaseStage):
         """
         self.logger.info("=" * 40)
         self.logger.info("Executing Experiments for {}".format(list(zip(self.corpus_type, self.embedding_type))))
+        self.logger.info(f"Experimenting with model architectures of {self.model_type}")
         self.logger.info("Using tokens from {}".format(self.corpus_type))
         self.logger.info("-" * 40)
 
