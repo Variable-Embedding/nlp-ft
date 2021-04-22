@@ -81,7 +81,7 @@ class TrainRnnModelStage(BaseStage):
         self.logger.info("Dictionary contains {} tokens.".format(len(self.dictionary)))
 
         for lstm_config in self.lstm_configs:
-            self.parent.topic = self.lstm_config
+            self.parent.topic = lstm_config
             model = Model(dictionary_size=len(self.dictionary)
                           , embedding_vectors=self.vectors
                           , embedding_size=self.vectors.size()[1]
