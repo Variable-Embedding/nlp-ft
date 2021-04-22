@@ -69,6 +69,7 @@ class RunLMExperiment(BaseStage):
         """
         """
         for corpus in self.corpus_type:
+
             benchmark = GetBenchmarkCorpra(corpus_type=corpus)
             benchmark.run()
             corpra_object = benchmark.corpra
@@ -81,6 +82,9 @@ class RunLMExperiment(BaseStage):
                 data.run()
 
                 for model_type in self.model_type:
+                    self.logger.info("=" * 40)
+                    self.logger.info(f'Starting experiments for Corpus: {corpus}, with Embedding: {embedding}, and Model Type: {model_type}.')
+                    self.logger.info("=" * 40)
                     self.model_config.update({'model_type': model_type})
                     trainer = TrainRnnModelStage(corpus_type=corpus
                                                  , train_file=data.corpra_numeric['train']
