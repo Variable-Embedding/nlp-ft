@@ -32,7 +32,12 @@ make prep
 make install
 ```
 
-3. Get and prep necessary data for nlp pipeline.
+3. Run the experiment pipeline for language models ("lm"). 
+```terminal
+make lm-experiement
+```
+
+4. Options to get and prep necessary data for nlp pipeline.
 
 * Get pre-trained glove embeddings. By default, the get_pre_trained_embeddings.yaml file is set to return all types of available embeddings "everything".
 _Note_: Options: "everything" to get all embedding files or one of: glove.6B, glove.42B, glove.840B, glove.twitter, fasttext.en, fasttext.simple, charngram
@@ -45,11 +50,6 @@ make embeddings
 _Note_: By default, make benchmark will get everything that is currently available in this script. 
 ```terminal
 make benchmark
-```
-
-4. Run the experiment pipeline for language models ("lm"). 
-```terminal
-make lm-experiement
 ```
 
 * The LM experiment can be controlled with run_lm_experiment_pipeline.yaml:
