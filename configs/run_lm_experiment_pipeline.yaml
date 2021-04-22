@@ -2,7 +2,6 @@ stages:
 - name: run_lm_experiment
   corpus_type:
   - wikitext2
-  - wikitext103
   - penntreebank
   embedding_type:
   - glove.6B.50d

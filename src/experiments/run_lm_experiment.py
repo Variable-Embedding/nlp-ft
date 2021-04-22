@@ -81,12 +81,16 @@ class RunLMExperiment(BaseStage):
                 pre_trained_embedding = GetPreTrainedEmbeddingsStage(embedding_type=embedding)
                 pre_trained_embedding.run()
 
-                data = Benchmark2Embeddings(embedding_type=embedding, corpra_object=corpra_object, min_freq=self.min_freq)
+                data = Benchmark2Embeddings(embedding_type=embedding
+                                            , corpra_object=corpra_object
+                                            , min_freq=self.min_freq)
                 data.run()
 
                 for model_type in self.model_type:
                     self.logger.info("=" * 40)
-                    self.logger.info(f'Starting experiments for Corpus: {corpus}, with Embedding: {embedding}, and Model Type: {model_type}.')
+                    self.logger.info(f'Starting experiments for Corpus: {corpus}'
+                                     f', with Embedding: {embedding}'
+                                     f', and Model Type: {model_type}.')
                     self.logger.info("=" * 40)
                     self.model_config.update({'model_type': model_type})
                     trainer = TrainRnnModelStage(corpus_type=corpus
