@@ -29,6 +29,7 @@ class TrainRnnModelStage(BaseStage):
                  , dictionary=None
                  , model_config=None
                  , train_config=None
+                 , **kwargs
                  ):
         """Initialization for model training stage.
         """

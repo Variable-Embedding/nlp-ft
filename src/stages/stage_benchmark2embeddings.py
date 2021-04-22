@@ -87,6 +87,7 @@ def make_corpra_vocab(logger, tokenizer, vectors_cache=None, min_freq=None, corp
     # the torch vocab object has mapped the vocab index to the embedding layer
     assert random_word_curr_vector.all() == random_word_orig_vector.all()
 
+
     return v, corpra_numeric
 
 
