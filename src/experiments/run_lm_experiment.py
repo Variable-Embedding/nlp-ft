@@ -61,8 +61,8 @@ class RunLMExperiment(BaseStage):
         """The function that is executed before the stage is run.
         """
         self.logger.info("=" * 40)
-        self.logger.info("Executing RNN model training stage")
-        self.logger.info("Using tokens from {}".format(6))
+        self.logger.info("Executing Experiments for {}".format(list(zip(self.corpus_type, self.embedding_type))))
+        self.logger.info("Using tokens from {}".format(self.corpus_type))
         self.logger.info("-" * 40)
 
     def run(self):
