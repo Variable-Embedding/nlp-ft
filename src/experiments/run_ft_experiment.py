@@ -5,8 +5,14 @@ from src.stages.stage_get_pre_trained_embedding import GetPreTrainedEmbeddingsSt
 from src.stages.stage_get_benchmark_corpra import GetBenchmarkCorpra
 from src.stages.base_stage import BaseStage
 from src.stages.stage_train_rnn_model import TrainRnnModelStage
+
+from src.model.model_tools import prep_embedding_layer
+
 import logging
 
+import torch.nn as nn
+import torch.fft as ft
+import matplotlib.pyplot as plt
 
 class RunFTExperiment(BaseStage):
     """Stage for training rnn model.
@@ -57,6 +63,7 @@ class RunFTExperiment(BaseStage):
             min_freq: optional, integer, default to 1 for filtering out infrequent words to unk token
         """
         super().__init__(parent)
+        self.embedding = None
         self.corpus_type = corpus_type
         self.embedding_type = embedding_type
         self.model_type = model_type
@@ -108,14 +115,47 @@ class RunFTExperiment(BaseStage):
                                             , parent=self.parent
                                             , corpus_type=corpus)
                 data.run()
-                token_sample_nums = data.corpra_numeric['train'][0][1].tolist()
+
+                token_sample_nums = data.corpra_numeric['train'][0][1]
                 token_sample_txts = [data.vocab.itos[i] for i in token_sample_nums][0]
                 token_sample_vectors = [data.vocab.vectors[i] for i in token_sample_nums]
+
                 print(token_sample_nums[:20])
                 print(token_sample_txts[:20])
                 print(len(token_sample_nums))
                 print(len(token_sample_vectors))
                 print(token_sample_vectors[0])
+
+                fig, ax = plt.subplots(2,2)
+
+                # ft1 -> see what fourier transforms do to tensor of numbers
+                ft1 = ft.rfft(token_sample_nums)
+                print('tensor, orig size:', token_sample_nums.size())
+                ax[0, 0].plot(ft1)
+                ax[0, 0].set_title('rfft on input tensor (pos values only)', size=8)
+                # similar to ft2, its nothing but a ft on list of numberes
+                ft2 = ft.fft(token_sample_nums)
+                ax[0, 1].plot(ft2)
+                ax[0, 1].set_title('fft on input tensor (all values)', size=8)
+
+                # This could be in the model class where we define embedding
+                self.embedding = prep_embedding_layer(vectors=data.vocab.vectors, trainable=False)
+                X = self.embedding(token_sample_nums)
+
+                # testing forward: this could be after embedding layer?
+                ft3 = ft.fft(X, norm="forward")
+                ax[1, 0].plot(ft3)
+                ax[1, 0].set_title('fft on input embedding layer - forward', size=8)
+
+                # testing backward
+                ft4 = ft.fft(X, norm="backward")
+                ax[1, 1].plot(ft4)
+                ax[1, 1].set_title('fft on input embedding layer - backward', size=8)
+                # display figures
+                # plt.title('Fourier Transforms on a Single IMDB Document')
+                fig.suptitle('Plots of Fourier Transforms on a Single IMDB Document\nWith Glove 50d Embedding.')
+                fig.tight_layout()
+                plt.show()
 
                 # test to see what ft does to embedding space
 
