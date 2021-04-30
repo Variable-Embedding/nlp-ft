@@ -1,18 +1,24 @@
-"""Runner file for language modeling experiments.
+"""Experimenting with imdb and fourier transform
 """
 from src.stages.stage_benchmark2embeddings import Benchmark2Embeddings
 from src.stages.stage_get_pre_trained_embedding import GetPreTrainedEmbeddingsStage
 from src.stages.stage_get_benchmark_corpra import GetBenchmarkCorpra
 from src.stages.base_stage import BaseStage
 from src.stages.stage_train_rnn_model import TrainRnnModelStage
+
+from src.model.model_tools import prep_embedding_layer
+
 import logging
 
+import torch.nn as nn
+import torch.fft as ft
+import matplotlib.pyplot as plt
 
-class RunLMExperiment(BaseStage):
+class RunFTExperiment(BaseStage):
     """Stage for training rnn model.
     """
-    name = "run_lm_experiment"
-    logger = logging.getLogger("pipeline").getChild("run_lm_experiment")
+    name = "run_ft_experiment"
+    logger = logging.getLogger("pipeline").getChild(name)
 
     def __init__(self
                  , corpus_type
@@ -56,7 +62,8 @@ class RunLMExperiment(BaseStage):
             lstm_configs: optional, a list of strings, default to ["default"]
             min_freq: optional, integer, default to 1 for filtering out infrequent words to unk token
         """
-        super(RunLMExperiment, self).__init__(parent)
+        super().__init__(parent)
+        self.embedding = None
         self.corpus_type = corpus_type
         self.embedding_type = embedding_type
         self.model_type = model_type
@@ -89,7 +96,7 @@ class RunLMExperiment(BaseStage):
         self.logger.info("-" * 40)
 
     def run(self):
-        """Cycle through combinations of experiment configurations.
+        """
         """
         # TODO: Set up a way to consolidate and produce a final report of all experiments.
         for corpus in self.corpus_type:
@@ -109,24 +116,46 @@ class RunLMExperiment(BaseStage):
                                             , corpus_type=corpus)
                 data.run()
 
-                for model_type in self.model_type:
-                    self.parent = f"{corpus}_{embedding}_{model_type}"
-                    self.logger.info("=" * 40)
-                    self.logger.info(f'Running experiments for Corpus: {corpus}'
-                                     f', with Embedding: {embedding}'
-                                     f', and Model Type: {model_type}.')
-                    self.logger.info("=" * 40)
-                    self.model_config.update({'model_type': model_type})
-                    trainer = TrainRnnModelStage(corpus_type=corpus
-                                                 , train_file=data.corpra_numeric['train']
-                                                 , valid_file=data.corpra_numeric['valid']
-                                                 , test_file=data.corpra_numeric['test']
-                                                 , model_config=self.model_config
-                                                 , train_config=self.train_config
-                                                 , vectors=data.vocab.vectors
-                                                 , dictionary=data.vocab.stoi
-                                                 , parent=self.parent
-                                                 )
-                    trainer.run()
+                token_sample_nums = data.corpra_numeric['train'][0][1]
+                token_sample_txts = [data.vocab.itos[i] for i in token_sample_nums][0]
+                token_sample_vectors = [data.vocab.vectors[i] for i in token_sample_nums]
+
+                print(token_sample_nums[:20])
+                print(token_sample_txts[:20])
+                print(len(token_sample_nums))
+                print(len(token_sample_vectors))
+                print(token_sample_vectors[0])
+
+                fig, ax = plt.subplots(2,2)
+
+                # ft1 -> see what fourier transforms do to tensor of numbers
+                ft1 = ft.rfft(token_sample_nums)
+                print('tensor, orig size:', token_sample_nums.size())
+                ax[0, 0].plot(ft1)
+                ax[0, 0].set_title('rfft on input tensor (pos values only)', size=8)
+                # similar to ft2, its nothing but a ft on list of numberes
+                ft2 = ft.fft(token_sample_nums)
+                ax[0, 1].plot(ft2)
+                ax[0, 1].set_title('fft on input tensor (all values)', size=8)
+
+                # This could be in the model class where we define embedding
+                self.embedding = prep_embedding_layer(vectors=data.vocab.vectors, trainable=False)
+                X = self.embedding(token_sample_nums)
+
+                # testing forward: this could be after embedding layer?
+                ft3 = ft.fft(X, norm="forward")
+                ax[1, 0].plot(ft3)
+                ax[1, 0].set_title('fft on input embedding layer - forward', size=8)
+
+                # testing backward
+                ft4 = ft.fft(X, norm="backward")
+                ax[1, 1].plot(ft4)
+                ax[1, 1].set_title('fft on input embedding layer - backward', size=8)
+                # display figures
+                # plt.title('Fourier Transforms on a Single IMDB Document')
+                fig.suptitle('Plots of Fourier Transforms on a Single IMDB Document\nWith Glove 50d Embedding.')
+                fig.tight_layout()
+                plt.show()
 
         return True
+

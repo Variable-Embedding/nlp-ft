@@ -1,0 +1,27 @@
+stages:
+- name: run_ft_experiment
+  corpus_type:
+  - imdb
+  embedding_type:
+  - glove.6B.50d
+  model_type:
+    - lstm
+  lstm_configs:
+    - default
+  batch_size: 512
+  max_init_param: 0.05
+  max_norm: 5
+  number_of_layers: 3
+  sequence_length: 30
+  sequence_step_size: 10
+  dropout_probability: 0.1
+  device: gpu
+  learning_rate_decay: 0.85
+  learning_rate: 1
+  number_of_epochs: 1
+  min_freq: 5
+# TODO: Debug rnn_training_comparison script
+#- name: rnn_training_comparison
+#  lstm_configs:
+#    - default
+#    - att-emb

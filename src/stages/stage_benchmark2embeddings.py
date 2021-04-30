@@ -20,16 +20,18 @@ import random
 import torch
 
 
-def make_corpra_vocab(logger, tokenizer, vectors_cache=None, min_freq=None, corpra_cache=None, corpra_object=None):
+def make_corpra_vocab(logger, tokenizer, vectors_cache=None, min_freq=None, corpra_cache=None, corpra_object=None, corpus_type=None):
     """A helper function to create torchtext vocab objects from benchmark texts.
     Combines pre-trained embedding vectors with torch objects.
 
     Args:
-        corpra_cache: a list of os paths to corpra
+        corpra_cache: a list of os paths to corpra, optional. If not provided, a torch vocab (corpra_object) is required.
         logger: a logging object
         tokenizer: a torchtext tokenizer object
         vectors_cache: an os path to the pre-trained embedding
         min_freq: an integer such as 1 or 5, If none, value is 1.
+        corpra_type: a string, name of the corpus
+
 
     Returns: v, a torchtext objecting having global vocabulary, lookup tables, and embedding layers
 
@@ -41,7 +43,9 @@ def make_corpra_vocab(logger, tokenizer, vectors_cache=None, min_freq=None, corp
     logger.info(f'Loading vectors from {vectors_cache}.')
     vectors = Vectors(vectors_cache)
 
-    if corpra_cache is not None:
+    # forcing imdb to run from corpus object
+    if corpra_cache is not None and 'imdb' not in corpus_type:
+
         for corpus_cache in corpra_cache:
             logger.info(f'Reading corpus cache from {corpus_cache}')
             key = 'train' if '.train.' in corpus_cache else 'test' if '.test.' in corpus_cache else 'valid'
@@ -55,30 +59,60 @@ def make_corpra_vocab(logger, tokenizer, vectors_cache=None, min_freq=None, corp
 
     elif corpra_object is not None:
 
+        def corpra_key(x, o):
+            if len(o) == 2:
+                return 'train' if x == 0 else 'test'
+            else:
+                return 'train' if x == 0 else 'valid' if x == 1 else 'test'
+
         for idx, corpus_object in enumerate(corpra_object):
-            key = 'train' if idx == 0 else 'valid' if idx == 1 else 'test'
+            key = corpra_key(idx, corpra_object)
             corpus = []
             logger.info(f'Tokenizing and making vocabulary for {key} set.')
-            for line in corpus_object:
-                counter.update(tokenizer(line))
-                corpus.extend(tokenizer(line))
-            corpra.update({key: corpus})
+
+            if corpus_type == 'imdb':
+
+                for line in corpus_object:
+                    tokens = tokenizer(line[1])
+                    counter.update(tokens)
+                    labels_tokens = tuple((line[0], tokens))
+                    corpus.append(labels_tokens)
+
+            else:
+
+                for line in corpus_object:
+                    counter.update(tokenizer(line))
+                    corpus.extend(tokenizer(line))
 
     v = Vocab(counter, min_freq=min_freq, vectors=vectors, vectors_cache=vectors_cache)
 
     text_pipeline = lambda x: [v[token] for token in tokenizer(x)]
-
+    label_code = lambda x: 0 if x == 'neg' else 1 if x == 'pos' else 2
     corpra_numeric = {}
 
     for data_set, corpus in corpra.items():
-        logger.info(f'Convering string tokens to numeric tokens for {data_set}.')
+        logger.info(f'Converting string tokens to numeric tokens for {data_set}.')
         corpus_numeric = []
-        for line in corpus:
-            numeric_tokens = text_pipeline(line)
-            corpus_numeric.extend(numeric_tokens)
 
-        corpus_numeric = torch.tensor(corpus_numeric, dtype=torch.long)
-        corpra_numeric.update({data_set: corpus_numeric})
+        if corpus_type == "imdb":
+            for line in corpus:
+                tokens = str(line[1])
+                label = torch.tensor(label_code(str(line[0])), dtype=torch.long)
+                numeric_tokens = torch.tensor(text_pipeline(tokens), dtype=torch.long)
+                labels_tokens = tuple((label, numeric_tokens))
+                corpus_numeric.append(labels_tokens)
+            corpra_numeric.update({data_set: corpus_numeric})
+
+        else:
+
+            for line in corpus:
+
+                numeric_tokens = text_pipeline(line)
+                corpus_numeric.extend(numeric_tokens)
+
+            corpus_numeric = torch.tensor(corpus_numeric, dtype=torch.long)
+
+            corpra_numeric.update({data_set: corpus_numeric})
 
     logger.info(f'Generated torch Vocab object with dictionary size of {len(v.stoi)}.')
 
@@ -122,7 +156,7 @@ def make_benchmark_corpra(vocab, tokenizer, cache_paths=None, corpra_object=None
             f.close()
 
     elif corpra_object is not None:
-
+        # FIXME: WTF this?
         for idx, corpus_object in enumerate(corpra_object):
             key = 'train' if idx == 0 else 'valid' if idx == 1 else 'test'
             for i in corpus_object:
@@ -142,7 +176,8 @@ def corpra_caches(logger, corpus_type=None):
 
     """
 
-    folder_names = {'wikitext2': 'wikitext-2'
+    folder_names = {
+        'wikitext2': 'wikitext-2'
         , 'wikitext103': 'wikitext-103'
         , 'imdb': 'aclimdb'}
 
@@ -239,6 +274,7 @@ class Benchmark2Embeddings(BaseStage):
 
         :return: True if the stage execution succeeded, False otherwise.
         """
+
         vectors_cache = embedding_cache(self.embedding_type, self.logger)
         if self.corpus_type is not None:
             self.corpra_cache = corpra_caches(corpus_type=self.corpus_type, logger=self.logger)
@@ -248,6 +284,7 @@ class Benchmark2Embeddings(BaseStage):
                                                             , logger=self.logger
                                                             , tokenizer=self.tokenizer
                                                             , corpra_object=self.corpra_object
-                                                            , min_freq=self.min_freq)
+                                                            , min_freq=self.min_freq
+                                                            , corpus_type=self.corpus_type)
 
         return True
