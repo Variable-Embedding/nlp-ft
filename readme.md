@@ -37,9 +37,16 @@ make prep
 make install
 ```
 
-3. Run the experiment pipeline for language models ("lm"). 
+3. Run experiments. 
+
+* Run the experiment pipeline for language models ("lm"). 
 ```terminal
 make lm-experiement
+```
+
+* Run the fourier transform experiment ("ft").
+```terminal
+make ft-experiment
 ```
 
 4. Options to get and prep necessary data for nlp pipeline.
