@@ -7,6 +7,7 @@ from src.stages.stage_benchmark2embeddings import Benchmark2Embeddings
 from src.stages.stage_train_rnn_model import TrainRnnModelStage
 from src.stages.stage_rnn_training_comparison import RnnTrainingComparisonStage
 from src.experiments.run_lm_experiment import RunLMExperiment
+from src.experiments.run_ft_experiment import RunFTExperiment
 from src.util import constants
 
 from os.path import join
@@ -19,7 +20,8 @@ possible_stages = [
     Benchmark2Embeddings,
     TrainRnnModelStage,
     RnnTrainingComparisonStage,
-    RunLMExperiment
+    RunLMExperiment,
+    RunFTExperiment
 ]
 stage_name_mapping = {s.name: s for s in possible_stages}
 
