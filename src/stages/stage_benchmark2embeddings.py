@@ -77,12 +77,13 @@ def make_corpra_vocab(logger, tokenizer, vectors_cache=None, min_freq=None, corp
                     counter.update(tokens)
                     labels_tokens = tuple((line[0], tokens))
                     corpus.append(labels_tokens)
-
+                corpra.update({key: corpus})
             else:
 
                 for line in corpus_object:
                     counter.update(tokenizer(line))
                     corpus.extend(tokenizer(line))
+                corpra.update({key: corpus})
 
     v = Vocab(counter, min_freq=min_freq, vectors=vectors, vectors_cache=vectors_cache)
 
@@ -106,12 +107,10 @@ def make_corpra_vocab(logger, tokenizer, vectors_cache=None, min_freq=None, corp
         else:
 
             for line in corpus:
-
                 numeric_tokens = text_pipeline(line)
                 corpus_numeric.extend(numeric_tokens)
 
             corpus_numeric = torch.tensor(corpus_numeric, dtype=torch.long)
-
             corpra_numeric.update({data_set: corpus_numeric})
 
     logger.info(f'Generated torch Vocab object with dictionary size of {len(v.stoi)}.')
@@ -122,6 +121,7 @@ def make_corpra_vocab(logger, tokenizer, vectors_cache=None, min_freq=None, corp
     random_word_orig_vector = vectors[random_word]
     # the torch vocab object has mapped the vocab index to the embedding layer
     assert random_word_curr_vector.all() == random_word_orig_vector.all()
+
 
     return v, corpra_numeric
 

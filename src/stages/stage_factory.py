@@ -37,7 +37,7 @@ def create_stage(stage_config):
     """
     if stage_config["name"] not in stage_name_mapping:
         raise LookupError("There is no stage with the {} name.".format(stage_config["name"]))
-        return None
+
     stage_name = stage_config["name"]
     del stage_config["name"]
     return stage_name_mapping[stage_name](**stage_config)
