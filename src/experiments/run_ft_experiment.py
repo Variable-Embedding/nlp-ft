@@ -157,7 +157,5 @@ class RunFTExperiment(BaseStage):
                 fig.tight_layout()
                 plt.show()
 
-                # test to see what ft does to embedding space
-
         return True
 

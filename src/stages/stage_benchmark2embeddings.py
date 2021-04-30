@@ -45,6 +45,7 @@ def make_corpra_vocab(logger, tokenizer, vectors_cache=None, min_freq=None, corp
 
     # forcing imdb to run from corpus object
     if corpra_cache is not None and 'imdb' not in corpus_type:
+
         for corpus_cache in corpra_cache:
             logger.info(f'Reading corpus cache from {corpus_cache}')
             key = 'train' if '.train.' in corpus_cache else 'test' if '.test.' in corpus_cache else 'valid'
@@ -83,8 +84,6 @@ def make_corpra_vocab(logger, tokenizer, vectors_cache=None, min_freq=None, corp
                     counter.update(tokenizer(line))
                     corpus.extend(tokenizer(line))
 
-            corpra.update({key: corpus})
-
     v = Vocab(counter, min_freq=min_freq, vectors=vectors, vectors_cache=vectors_cache)
 
     text_pipeline = lambda x: [v[token] for token in tokenizer(x)]
@@ -107,9 +106,11 @@ def make_corpra_vocab(logger, tokenizer, vectors_cache=None, min_freq=None, corp
         else:
 
             for line in corpus:
+
                 numeric_tokens = text_pipeline(line)
                 corpus_numeric.extend(numeric_tokens)
-                corpus_numeric = torch.tensor(corpus_numeric, dtype=torch.long)
+
+            corpus_numeric = torch.tensor(corpus_numeric, dtype=torch.long)
 
             corpra_numeric.update({data_set: corpus_numeric})
 
@@ -273,6 +274,7 @@ class Benchmark2Embeddings(BaseStage):
 
         :return: True if the stage execution succeeded, False otherwise.
         """
+
         vectors_cache = embedding_cache(self.embedding_type, self.logger)
         if self.corpus_type is not None:
             self.corpra_cache = corpra_caches(corpus_type=self.corpus_type, logger=self.logger)

@@ -105,7 +105,8 @@ class RunLMExperiment(BaseStage):
                 data = Benchmark2Embeddings(embedding_type=embedding
                                             , corpra_object=corpra_object
                                             , min_freq=self.min_freq
-                                            , parent=self.parent)
+                                            , parent=self.parent
+                                            , corpus_type=corpus)
                 data.run()
 
                 for model_type in self.model_type:
@@ -128,6 +129,4 @@ class RunLMExperiment(BaseStage):
                                                  )
                     trainer.run()
 
-
         return True
-
