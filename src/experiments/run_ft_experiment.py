@@ -143,14 +143,14 @@ class RunFTExperiment(BaseStage):
                 X = self.embedding(token_sample_nums)
 
                 # testing forward: this could be after embedding layer?
-                ft3 = ft.fft(X, norm="forward")
+                ft3 = ft.rfft(X, norm="forward")
                 ax[1, 0].plot(ft3)
-                ax[1, 0].set_title('fft on input embedding layer - forward', size=8)
+                ax[1, 0].set_title('rfft on input embedding layer - forward', size=8)
 
                 # testing backward
-                ft4 = ft.fft(X, norm="backward")
+                ft4 = ft.rfft(X, norm="backward")
                 ax[1, 1].plot(ft4)
-                ax[1, 1].set_title('fft on input embedding layer - backward', size=8)
+                ax[1, 1].set_title('rfft on input embedding layer - backward', size=8)
                 # display figures
                 # plt.title('Fourier Transforms on a Single IMDB Document')
                 fig.suptitle('Plots of Fourier Transforms on a Single IMDB Document\nWith Glove 50d Embedding.')
