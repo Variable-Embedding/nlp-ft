@@ -88,12 +88,16 @@ class Model(nn.Module):
 
     def forward(self, X, states=None):
         X = self.embedding(X)
+        # FT THING HERE
+        # [1265, 26]
+
 
         if self.model_type == 'lstm':
             X = self.dropout(X)
             X, states = self.model_module(X, states)
             output = torch.tensordot(X, self.embedding.weight, dims=([2], [1]))
             return output, states
+
         elif self.model_type == 'ft':
             # TODO: FT class
             X = self.model_module(X)

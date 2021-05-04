@@ -23,6 +23,7 @@ from torchtext.datasets.yahooanswers import YahooAnswers
 from torchtext.datasets.imdb import IMDB
 
 
+
 def get_benchmark(corpus_type, benchmark, logger):
     """A helper function to download benchmark corpra with torchtext api.
 

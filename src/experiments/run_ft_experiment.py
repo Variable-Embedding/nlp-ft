@@ -13,6 +13,9 @@ import logging
 import torch.nn as nn
 import torch.fft as ft
 import matplotlib.pyplot as plt
+from scipy.signal.spectral import spectrogram
+import numpy as np
+
 
 class RunFTExperiment(BaseStage):
     """Stage for training rnn model.
@@ -128,34 +131,35 @@ class RunFTExperiment(BaseStage):
 
                 fig, ax = plt.subplots(2,2)
 
-                # ft1 -> see what fourier transforms do to tensor of numbers
-                ft1 = ft.rfft(token_sample_nums)
-                print('tensor, orig size:', token_sample_nums.size())
-                ax[0, 0].plot(ft1)
-                ax[0, 0].set_title('rfft on input tensor (pos values only)', size=8)
-                # similar to ft2, its nothing but a ft on list of numberes
-                ft2 = ft.fft(token_sample_nums)
-                ax[0, 1].plot(ft2)
-                ax[0, 1].set_title('fft on input tensor (all values)', size=8)
-
                 # This could be in the model class where we define embedding
                 self.embedding = prep_embedding_layer(vectors=data.vocab.vectors, trainable=False)
                 X = self.embedding(token_sample_nums)
 
+                ft1 = ft.rfftn(input=X, norm="forward")
+                ax[0, 0].plot(ft1[:, 1])
+                ax[0, 0].set_title(f'rfftn forward - regular 1-dim\n- ft shape({ft1.shape})', size=8)
+                # similar to ft2, its nothing but a ft on list of numberes
+                ft2 = ft.rfft(input=X, norm="forward")
+                ax[0, 1].plot(ft2)
+                ax[0, 1].set_title(f'rfft forward - regular all-dim\n- ft shape({ft2.shape})', size=8)
+
                 # testing forward: this could be after embedding layer?
-                ft3 = ft.rfft(X, norm="forward")
-                ax[1, 0].plot(ft3)
-                ax[1, 0].set_title('rfft on input embedding layer - forward', size=8)
+                ft3 = ft.rfftn(input=X, norm="forward")
+                ax[1, 0].specgram(ft3[:, 1])
+                ax[1, 0].set_title(f'rfftn forward - specgram 1-dim\n- ft shape({ft3.shape})', size=8)
 
                 # testing backward
-                ft4 = ft.rfft(X, norm="backward")
-                ax[1, 1].plot(ft4)
-                ax[1, 1].set_title('rfft on input embedding layer - backward', size=8)
+                ft4 = ft.rfft(input=X, norm="forward")
+                ax[1, 1].specgram(ft4.T)
+                # ax[1, 1].specgram(ft4[:, 1], alpha=.5)
+                ax[1, 1].set_title(f'rfft forward - specgram all-dim\n- ft shape({ft4.shape})', size=8)
                 # display figures
-                # plt.title('Fourier Transforms on a Single IMDB Document')
-                fig.suptitle('Plots of Fourier Transforms on a Single IMDB Document\nWith Glove 50d Embedding.')
+                fig.suptitle(f'Plots of Fourier Transforms on a Single IMDB Document\n'
+                             f'With Glove 50d Embedding and Doc Len: {len(token_sample_nums)}.')
                 fig.tight_layout()
                 plt.show()
 
+
         return True
+
 
