@@ -1,16 +1,18 @@
 """Experimenting with imdb and fourier transform
 """
+from src.model.model_base import Model
 from src.stages.stage_benchmark2embeddings import Benchmark2Embeddings
 from src.stages.stage_get_pre_trained_embedding import GetPreTrainedEmbeddingsStage
 from src.stages.stage_get_benchmark_corpra import GetBenchmarkCorpra
 from src.stages.base_stage import BaseStage
 from src.stages.stage_train_rnn_model import TrainRnnModelStage
-
+from src.model.model_tools import generate_initial_states
 from src.model.model_tools import prep_embedding_layer
 
 import logging
 
 import torch.nn as nn
+import torch
 import torch.fft as ft
 import matplotlib.pyplot as plt
 from scipy.signal.spectral import spectrogram
@@ -42,6 +44,7 @@ class RunFTExperiment(BaseStage):
                  , number_of_epochs=1
                  , lstm_configs=None
                  , min_freq=1
+                 , model_task='classification'
                  ):
         """Initialization for experimental stages.
 
@@ -88,6 +91,7 @@ class RunFTExperiment(BaseStage):
             , 'learning_rate': learning_rate
             , 'number_of_epochs': number_of_epochs
         }
+        self.model_task = model_task
 
     def pre_run(self):
         """The function that is executed before the stage is run.
@@ -118,6 +122,44 @@ class RunFTExperiment(BaseStage):
                                             , parent=self.parent
                                             , corpus_type=corpus)
                 data.run()
+
+                train_file = data.corpra_numeric['train']
+                train_labels = data.corpra_labels['train']
+                valid_file = None
+                test_file = data.corpra_numeric['test']
+                test_labels = data.corpra_labels['test']
+                vectors = data.vocab.vectors
+                dictionary = data.vocab.stoi
+
+                for model_type in self.model_type:
+
+                    self.parent = f"{corpus}_{embedding}_{model_type}"
+                    self.logger.info("=" * 40)
+                    self.logger.info(f'Running experiments for Corpus: {corpus}'
+                                     f', with Embedding: {embedding}'
+                                     f', and Model Type: {model_type}.')
+                    self.logger.info("=" * 40)
+                    self.model_config.update({'model_type': model_type})
+
+                    model = Model(dictionary_size=len(dictionary)
+                                  , embedding_vectors=vectors
+                                  , embedding_size=vectors.size()[1]
+                                  , model_task=self.model_task
+                                  , input_size=1
+                                  , **self.model_config)
+
+                    # run one cycle to check backprop of ft
+                    model.train()
+
+                    model.zero_grad()
+                    X = torch.tensor(train_file[0])
+                    states = generate_initial_states(model)
+                    X = X.reshape(X.size(0), 1)
+
+                    output, states = model(X, states)
+                    print('output', output)
+                    print('states', states)
+                    breakpoint()
 
                 token_sample_nums = data.corpra_numeric['train'][0][1]
                 token_sample_txts = [data.vocab.itos[i] for i in token_sample_nums][0]

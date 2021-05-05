@@ -24,6 +24,8 @@ class Model(nn.Module):
                  , embedding_vectors=None
                  , embedding_trainable=True
                  , model_type=None
+                 , model_task=None
+                 , input_size=None
                  , **kwargs
                  ):
         """Initialization for the model.
@@ -50,6 +52,7 @@ class Model(nn.Module):
         self.max_norm = max_norm
         self.max_init_param = max_init_param
         self.model_type = model_type
+        self.model_task = model_task
 
         if sequence_step_size is None:
             self.sequence_step_size = sequence_length
@@ -69,11 +72,6 @@ class Model(nn.Module):
                                      , number_of_layers
                                      , dropout_probability
                                      , lstm_configuration)
-
-        elif model_type == 'ft':
-            # TODO: FT class
-            self.model_module = FT()
-
         else:
             self.model_module = None
 
@@ -87,20 +85,21 @@ class Model(nn.Module):
             self.embedding = prep_embedding_layer(vectors=embedding_vectors, trainable=embedding_trainable)
 
     def forward(self, X, states=None):
-        X = self.embedding(X)
-        # FT THING HERE
-        # [1265, 26]
 
+        X = self.embedding(X)
+
+        if self.model_task == 'classification':
+            print('run classification thing here!!!')
+            X = self.dropout(X)
+            X, states = self.model_module(X, states)
+            output = torch.tensordot(X, self.embedding.weight, dims=([2], [1]))
+            # TODO: produce softmax output over n categories
+            
+            breakpoint()
 
         if self.model_type == 'lstm':
             X = self.dropout(X)
             X, states = self.model_module(X, states)
             output = torch.tensordot(X, self.embedding.weight, dims=([2], [1]))
-            return output, states
 
-        elif self.model_type == 'ft':
-            # TODO: FT class
-            X = self.model_module(X)
-            # some kind of linear thing here
-            # some kind of ReLu activation stuff here
-            # return some output and states here
+            return output, states

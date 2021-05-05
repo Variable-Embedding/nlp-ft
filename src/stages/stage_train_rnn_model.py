@@ -29,6 +29,7 @@ class TrainRnnModelStage(BaseStage):
                  , dictionary=None
                  , model_config=None
                  , train_config=None
+                 , model_task=None
                  , **kwargs
                  ):
         """Initialization for model training stage.
@@ -46,6 +47,7 @@ class TrainRnnModelStage(BaseStage):
         self.lstm_configs = model_config['lstm_configs'] if model_config['lstm_configs'] is not None else model_config['lstm_configiratopm']
         self.dictionary = dictionary
         self.topic = None
+        self.model_task = model_task
 
     def pre_run(self):
         """The function that is executed before the stage is run.
@@ -86,14 +88,17 @@ class TrainRnnModelStage(BaseStage):
             model = Model(dictionary_size=len(self.dictionary)
                           , embedding_vectors=self.vectors
                           , embedding_size=self.vectors.size()[1]
+                          , model_task=self.model_task
                           , **self.model_config)
             self.logger.info("Starting model training with lstm configuration {} ...".format(
                 lstm_config))
+
             train_losses, valid_losses = train_model(model=model
                                                      , train_tokens=train_tokens
                                                      , valid_tokens=valid_tokens
                                                      , logger=self.logger
                                                      , **self.train_config)
+
             self.logger.info("Finished model training.")
             self.logger.info("Saving the model...")
             file_path = join(constants.DATA_PATH, "{}.{}.model.pkl".format(self.parent,

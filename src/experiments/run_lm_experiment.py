@@ -117,10 +117,20 @@ class RunLMExperiment(BaseStage):
                                      f', and Model Type: {model_type}.')
                     self.logger.info("=" * 40)
                     self.model_config.update({'model_type': model_type})
+
+                    train_file = data.corpra_numeric['train']
+
+                    try:
+                        valid_file = data.corpra_numeric['valid']
+                    except KeyError:
+                        valid_file = None
+
+                    test_file = data.corpra_numeric['test']
+
                     trainer = TrainRnnModelStage(corpus_type=corpus
-                                                 , train_file=data.corpra_numeric['train']
-                                                 , valid_file=data.corpra_numeric['valid']
-                                                 , test_file=data.corpra_numeric['test']
+                                                 , train_file=train_file
+                                                 , valid_file=valid_file
+                                                 , test_file=test_file
                                                  , model_config=self.model_config
                                                  , train_config=self.train_config
                                                  , vectors=data.vocab.vectors

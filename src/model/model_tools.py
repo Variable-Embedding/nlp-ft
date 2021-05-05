@@ -1,6 +1,6 @@
 from torch.nn import Embedding, utils
 
-from torch import zeros, tensor, argmax, no_grad
+from torch import zeros, tensor, argmax, no_grad, int64
 import torch.nn.functional as F
 import numpy as np
 import progressbar
@@ -188,8 +188,12 @@ def detach_states(states):
     return (h.detach(), c.detach())
 
 
-def batch_data(tokens, model, batch_size=None, sequence_length=None, sequence_step_size=None,
-               shuffle=False):
+def batch_data(tokens
+               , model
+               , batch_size=None
+               , sequence_length=None
+               , sequence_step_size=None
+               , shuffle=False):
     """Helper function to batch the data.
 
     Args:
@@ -209,8 +213,8 @@ def batch_data(tokens, model, batch_size=None, sequence_length=None, sequence_st
     if sequence_step_size is None:
         sequence_step_size = model.sequence_step_size
 
-    # data = torch.tensor(tokens, dtype=torch.int64)
     data = tokens
+
     words_per_batch = data.size(0) // batch_size
     data = data[:words_per_batch * batch_size]
     data = data.view(batch_size, -1)
@@ -221,8 +225,8 @@ def batch_data(tokens, model, batch_size=None, sequence_length=None, sequence_st
 
     for sequence_start in sequence_start_list:
         sequence_end = sequence_start + sequence_length
-        prefix = data[:,sequence_start:sequence_end].transpose(1, 0).to(model.device)
-        target = data[:,sequence_start + 1:sequence_end + 1].transpose(1, 0).to(model.device)
+        prefix = data[:, sequence_start:sequence_end].transpose(1, 0).to(model.device)
+        target = data[:, sequence_start + 1:sequence_end + 1].transpose(1, 0).to(model.device)
         yield prefix, target
         del prefix
         del target

@@ -8,7 +8,7 @@ stages:
     - lstm
   lstm_configs:
     - default
-  batch_size: 512
+  batch_size: 1
   max_init_param: 0.05
   max_norm: 5
   number_of_layers: 3

@@ -20,7 +20,8 @@ import random
 import torch
 
 
-def make_corpra_vocab(logger, tokenizer, vectors_cache=None, min_freq=None, corpra_cache=None, corpra_object=None, corpus_type=None):
+def make_corpra_vocab(logger, tokenizer, vectors_cache=None, min_freq=None, corpra_cache=None, corpra_object=None,
+                      corpus_type=None):
     """A helper function to create torchtext vocab objects from benchmark texts.
     Combines pre-trained embedding vectors with torch objects.
 
@@ -90,19 +91,24 @@ def make_corpra_vocab(logger, tokenizer, vectors_cache=None, min_freq=None, corp
     text_pipeline = lambda x: [v[token] for token in tokenizer(x)]
     label_code = lambda x: 0 if x == 'neg' else 1 if x == 'pos' else 2
     corpra_numeric = {}
+    corpra_labels = {}
 
     for data_set, corpus in corpra.items():
         logger.info(f'Converting string tokens to numeric tokens for {data_set}.')
         corpus_numeric = []
-
+        corpus_labels = {}
         if corpus_type == "imdb":
-            for line in corpus:
+            for idx, line in enumerate(corpus):
                 tokens = str(line[1])
                 label = torch.tensor(label_code(str(line[0])), dtype=torch.long)
                 numeric_tokens = torch.tensor(text_pipeline(tokens), dtype=torch.long)
-                labels_tokens = tuple((label, numeric_tokens))
-                corpus_numeric.append(labels_tokens)
+                # labels_tokens = tuple((label, numeric_tokens))
+                corpus_numeric.append(numeric_tokens)
+                # idx_labels = tuple((idx, label))
+                corpus_labels.update({idx: label})
+
             corpra_numeric.update({data_set: corpus_numeric})
+            corpra_labels.update({data_set: corpus_labels})
 
         else:
 
@@ -122,8 +128,10 @@ def make_corpra_vocab(logger, tokenizer, vectors_cache=None, min_freq=None, corp
     # the torch vocab object has mapped the vocab index to the embedding layer
     assert random_word_curr_vector.all() == random_word_orig_vector.all()
 
-
-    return v, corpra_numeric
+    if corpus_type == 'imdb':
+        return v, corpra_numeric, corpra_labels
+    else:
+        return v, corpra_numeric
 
 
 def make_benchmark_corpra(vocab, tokenizer, cache_paths=None, corpra_object=None):
@@ -261,6 +269,7 @@ class Benchmark2Embeddings(BaseStage):
         self.corpra_object = corpra_object
         self.corpra_numeric = None
         self.min_freq = min_freq
+        self.corpra_labels = None
 
     def pre_run(self):
         """The function that is executed before the stage is run.
@@ -279,12 +288,20 @@ class Benchmark2Embeddings(BaseStage):
         if self.corpus_type is not None:
             self.corpra_cache = corpra_caches(corpus_type=self.corpus_type, logger=self.logger)
 
-        self.vocab, self.corpra_numeric = make_corpra_vocab(corpra_cache=self.corpra_cache
-                                                            , vectors_cache=vectors_cache
-                                                            , logger=self.logger
-                                                            , tokenizer=self.tokenizer
-                                                            , corpra_object=self.corpra_object
-                                                            , min_freq=self.min_freq
-                                                            , corpus_type=self.corpus_type)
+        res = make_corpra_vocab(corpra_cache=self.corpra_cache
+                                , vectors_cache=vectors_cache
+                                , logger=self.logger
+                                , tokenizer=self.tokenizer
+                                , corpra_object=self.corpra_object
+                                , min_freq=self.min_freq
+                                , corpus_type=self.corpus_type)
+
+        if len(res) < 3:
+            self.vocab = res[0]
+            self.corpra_numeric = res[1]
+        else:
+            self.vocab = res[0]
+            self.corpra_numeric = res[1]
+            self.corpra_labels = res[2]
 
         return True

@@ -51,8 +51,11 @@ class LSTM(nn.Module):
             self.lstm = nn.LSTM(2*embedding_size, embedding_size, num_layers=number_of_layers,
                                 dropout=dropout_probability)
         else:
-            self.lstm = nn.LSTM(embedding_size, embedding_size, num_layers=number_of_layers,
-                                dropout=dropout_probability)
+            self.lstm = nn.LSTM(embedding_size
+                                , embedding_size
+                                , num_layers=number_of_layers
+                                , dropout=dropout_probability)
+
         self.dropout = nn.Dropout(dropout_probability)
 
     def forward(self, X, states=None):
