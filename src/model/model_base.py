@@ -85,7 +85,7 @@ class Model(nn.Module):
             self.embedding = prep_embedding_layer(vectors=embedding_vectors, trainable=embedding_trainable)
 
     def forward(self, X, states=None):
-
+        text_len = X.size(0)
         X = self.embedding(X)
 
         if self.model_task == 'classification':
@@ -94,7 +94,8 @@ class Model(nn.Module):
             X, states = self.model_module(X, states)
             output = torch.tensordot(X, self.embedding.weight, dims=([2], [1]))
             # TODO: produce softmax output over n categories
-            
+            print(output.size())
+
             breakpoint()
 
         if self.model_type == 'lstm':
