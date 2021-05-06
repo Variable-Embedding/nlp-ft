@@ -1,4 +1,8 @@
-# NLP pipeline
+# This project is archived. 
+
+Learnings from this project about torch text and fourier transform usage captured.
+
+## NLP pipeline
 
 This is a natural language processing (NLP) pipeline built for research during [MSAI 337, Introduction to Natural Language Processing](https://www.mccormick.northwestern.edu/artificial-intelligence/curriculum/descriptions/msai-337.html).
 
